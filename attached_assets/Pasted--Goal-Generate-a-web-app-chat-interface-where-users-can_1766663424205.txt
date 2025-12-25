@@ -1,0 +1,224 @@
+**Goal:**
+Generate a web app/chat interface where users can pick a Cerebras model, send messages, receive tool responses from an n8n webhook, and inspect detailed reasoning & metadata in a side pane.
+
+Do **not** implement backend persistence — this is purely frontend in Replit.
+
+---
+
+## 🌐 Requirements
+
+* **Framework:** React (with Vite) is recommended
+* **Styling:** Tailwind CSS or plain CSS
+* **HTTP library:** `fetch` (browser API)
+* the above points are just suggestions you can use whatever you want okay
+
+* **No backend server beyond webhook calls**
+
+---
+
+## 📌 Features to Build
+
+1. **Model Selector**
+
+   * Fetch available models dynamically from Cerebras API
+   * Endpoint:
+
+     ```
+     GET https://api.cerebras.ai/v1/models
+     ```
+
+     Response includes data objects with model IDs and metadata. ([Cerebras Inference][1])
+   * Populate a dropdown with model IDs as options
+   * Show loading state while fetching
+
+2. **Chat Interface**
+
+   * A text input for user messages
+   * A send button
+   * Disable send until a model is selected
+
+3. **Webhook Call**
+
+   * On send, POST to:
+
+     ```
+     https://n8n.dev01.modelmatrix.ai/webhook-test/86f31db0-921a-40d5-b6a7-6dc4ec542705
+     ```
+   * Body:
+
+     ```json
+     {
+       "model_name": "<selected model>",
+       "first_message": "<user text>"
+     }
+     ```
+   * Parse response — always an array with a single item
+
+4. **Render Chat Responses**
+
+   * Only display **Tool_Call_Response** items in the chat
+   * Each tool object shown as a **flat key-value list**
+   * One object per line
+   * If an object includes an image URL (e.g., `AccountImageUrl`), show a small icon/avatar
+
+5. **Side Pane Inspector**
+
+   * Appears automatically when a chat response arrives
+   * Shows:
+
+     * **Intent_Analyzer_Response**
+     * **Runtime_Prompt_Response**
+   * Two separate expandable sections
+   * Auto-generate form fields (read-only) for each JSON key/value
+   * Markdown rendering for relevant fields (e.g., reasoning text)
+   * Show `usage` tokens & cost always
+   * `reasoning_details` should be in a collapsible block
+
+6. **Click Interactions**
+
+   * Chat tool messages are clickable
+   * Clicking loads the associated JSONs into the side pane
+   * Highlight selected chat message
+
+7. **Error Handling**
+
+   * If `Tool_Call_Response` contains an error, show it directly in chat
+   * Do not crash UI
+
+---
+
+## 🧠 UI Details (Design System)
+
+* **Colors**
+
+  * Primary: `#6366F1`
+  * Secondary: `#8B5CF6`
+  * Background: `#F9FAFB`
+  * Text: `#111827`
+  * Code/Detail Pane: `#1F2937`
+  * Accent: `#10B981`
+
+* **Typography**
+
+  * Inter / SF Pro / system font
+  * Monospace for key-value lines and JSON details
+
+* **Layout**
+
+  * Header: Model selector dropdown
+  * Left pane: Chat area
+  * Right pane: Side inspector (auto-open on response)
+  * Responsive: side pane stacks under chat on narrow screens
+
+---
+
+## 🗂 Data Structures
+
+```ts
+type ChatMessage = {
+  id: string
+  role: "user" | "assistant"
+  text: string
+  toolResponse?: any[] | Error
+  intentAnalyzer?: object
+  runtimePrompt?: object
+}
+```
+
+Store a list of chat messages in state.
+
+Each message with a successful webhook should store:
+
+* `toolResponse`
+* `intentAnalyzer`
+* `runtimePrompt`
+
+---
+
+## 🧾 Step-by-Step Implementation Tasks
+
+### 1️⃣ Fetch Models
+
+```js
+const fetchCerebrasModels = async () => {
+  const res = await fetch('https://api.cerebras.ai/v1/models')
+  const json = await res.json()
+  const models = json.data.map(m => m.id)
+  // Populate dropdown
+}
+```
+
+Emergent note: models widely include `llama3.1-8b`, `llama-3.3-70b`, `qwen-3-32b`, `gpt-oss-120b`, etc. ([Cerebras Inference][2])
+
+---
+
+### 2️⃣ UI Components (Suggested)
+
+```
+App
+ ├─ Header (ModelSelector)
+ ├─ ChatArea
+ │    ├─ MessageList
+ │    ├─ MessageInput
+ ├─ SidePane (Inspector)
+ ├─ LoadingOverlay
+ └─ ErrorBanner
+```
+
+---
+
+### 3️⃣ Webhook Call
+
+```js
+const callWebhook = async (model, message) => {
+  const res = await fetch(WEBHOOK_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ model_name: model, first_message: message })
+  })
+  return await res.json()
+}
+```
+
+---
+
+### 4️⃣ Chat Rendering
+
+* For each tool object:
+
+  * Render each key + value on one line
+  * Example:
+
+    ```
+    AccountType: Checking
+    Currency: USD
+    CalculatedBalance: 7077.249
+    ```
+
+---
+
+### 5️⃣ Side Pane Rendering
+
+* Render JSON as auto-generated form:
+
+  ```
+  FieldLabel: value
+  FieldLabel: value
+  ```
+* Expandable sections:
+
+  * `Intent Analyzer`
+  * `Runtime Prompt`
+* Collapsible sub-block for `reasoning_details`
+
+---
+
+## 🧪 Acceptance Tests
+
+* [ ] Model dropdown loads dynamically
+* [ ] Users can send messages only after selecting a model
+* [ ] Webhook calls are made correctly
+* [ ] Tool responses render in chat
+* [ ] Side pane shows analyzer + prompt JSON
+* [ ] Errors are shown cleanly
+* [ ] Clicking messages updates side pane
