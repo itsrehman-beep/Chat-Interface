@@ -1,0 +1,74 @@
+"Tool_Call_Response": [
+            {
+                "json": {
+                    "AccountId": "A0002",
+                    "CustomerId": "C0001",
+                    "AccountType": "Checking",
+                    "Currency": "USD",
+                    "Status": "Active",
+                    "IBAN": "US09876543210987654321",
+                    "CalculatedBalance": 7077.249,
+                    "IsDefault": true,
+                    "OverdraftLimit": 1000,
+                    "AccountNickname": "Main Checking",
+                    "AccountImageUrl": "http://bank-emulator-dev.prod-k8s.aiatcore.com/static/images/accounts/checking.png"
+                },
+                "pairedItem": {
+                    "item": 0
+                }
+            },
+            {
+                "json": {
+                    "AccountId": "A0007",
+                    "CustomerId": "C0001",
+                    "AccountType": "Savings",
+                    "Currency": "RMB",
+                    "Status": "Active",
+                    "IBAN": "CN55556666777788889999",
+                    "CalculatedBalance": 34097.535,
+                    "IsDefault": false,
+                    "Interest": 1.8,
+                    "AccountNickname": "China Transactions",
+                    "AccountImageUrl": "http://bank-emulator-dev.prod-k8s.aiatcore.com/static/images/accounts/savings.png"
+                },
+                "pairedItem": {
+                    "item": 0
+                }
+            },
+            {
+                "json": {
+                    "AccountId": "A0001",
+                    "CustomerId": "C0001",
+                    "AccountType": "Savings",
+                    "Currency": "USD",
+                    "Status": "Active",
+                    "IBAN": "US04392394934",
+                    "CalculatedBalance": 18436.555,
+                    "IsDefault": false,
+                    "Interest": 1,
+                    "AccountNickname": "Extra Savings",
+                    "AccountImageUrl": "http://bank-emulator-dev.prod-k8s.aiatcore.com/static/images/accounts/savings.png"
+                },
+                "pairedItem": {
+                    "item": 0
+                }
+            },
+            {
+                "json": {
+                    "AccountId": "A0015",
+                    "CustomerId": "C0001",
+                    "AccountType": "CreditCard",
+                    "Currency": "USD",
+                    "Status": "Active",
+                    "CalculatedBalance": 0,
+                    "IsDefault": false,
+                    "CreditLimit": 3000,
+                    "AvailableCredit": 3000,
+                    "AccountNickname": "Rewards Card",
+                    "AccountImageUrl": "http://bank-emulator-dev.prod-k8s.aiatcore.com/static/images/accounts/creditcard.png"
+                },
+                "pairedItem": {
+                    "item": 0
+                }
+            }
+        ]

@@ -1,7 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 
-const WEBHOOK_URL = "https://n8n.dev01.modelmatrix.ai/webhook-test/86f31db0-921a-40d5-b6a7-6dc4ec542705";
+const WEBHOOK_URL =
+  "https://n8n.dev01.modelmatrix.ai/webhook-test/86f31db0-921a-40d5-b6a7-6dc4ec542705";
 
 const AVAILABLE_MODELS = [
   "meta-llama/llama-3.1-8b-instruct",
@@ -14,7 +15,7 @@ const AVAILABLE_MODELS = [
 
 export async function registerRoutes(
   httpServer: Server,
-  app: Express
+  app: Express,
 ): Promise<Server> {
   app.get("/api/models", async (req, res) => {
     res.json({
