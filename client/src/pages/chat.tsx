@@ -75,12 +75,23 @@ export default function ChatPage() {
         return "Response processed successfully";
       };
 
+      const unwrapToolResponse = (response: unknown): unknown[] | undefined => {
+        if (!response) return undefined;
+        const items = Array.isArray(response) ? response : [response];
+        return items.map((item: unknown) => {
+          if (item && typeof item === "object" && "json" in item) {
+            return (item as { json: unknown }).json;
+          }
+          return item;
+        });
+      };
+
       const assistantMessage: ChatMessage = {
         id: crypto.randomUUID(),
         role: "assistant",
         text: extractAssistantText(),
         timestamp: Date.now(),
-        toolResponse: Array.isArray(toolResponse) ? toolResponse : toolResponse ? [toolResponse] : undefined,
+        toolResponse: unwrapToolResponse(toolResponse),
         intentAnalyzer,
         runtimePrompt,
         error: errorMessage,
