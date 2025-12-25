@@ -117,9 +117,9 @@ function CollapsibleSection({ title, icon, data, defaultOpen = true }: Collapsib
             </div>
           ))}
 
-          {reasoningDetails && (
+          {reasoningDetails !== undefined && reasoningDetails !== null ? (
             <ReasoningDetailsSection data={reasoningDetails} />
-          )}
+          ) : null}
 
           {usage && (
             <UsageSection usage={usage} />

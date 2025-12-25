@@ -1,66 +1,68 @@
-# Cerebras Model Chat Interface
+# Cerebras Chat Interface
 
 ## Overview
+A React-based chat interface for interacting with Cerebras/OpenRouter AI models via an n8n webhook. Users can select a model, send messages, and inspect detailed responses including intent analysis and runtime prompts.
 
-A web application chat interface for interacting with Cerebras AI models. Users can select from available models, send messages, receive responses via an n8n webhook integration, and inspect detailed reasoning and metadata in a side pane. The application is built as a React frontend with a lightweight Express backend that proxies webhook requests.
+## Current State
+- **Status**: MVP Complete
+- **Last Updated**: December 2025
 
-## User Preferences
+## Features
+- **Model Selector**: Static dropdown with 6 available models (meta-llama, qwen, openai, z-ai)
+- **Chat Interface**: Real-time messaging with user/assistant message rendering
+- **Tool Response Display**: Flat key-value rendering with image URL thumbnail support
+- **Side Pane Inspector**: Expandable sections for Intent Analyzer and Runtime Prompt responses
+- **Theme Toggle**: Light/dark mode with localStorage persistence
+- **Responsive Design**: Side pane stacks on mobile devices
 
-Preferred communication style: Simple, everyday language.
+## Architecture
 
-## System Architecture
+### Frontend (React + Vite)
+- `client/src/pages/chat.tsx` - Main chat page with all state management
+- `client/src/components/` - Reusable UI components:
+  - `model-selector.tsx` - Model dropdown selector
+  - `chat-message.tsx` - Individual message rendering with tool responses
+  - `message-input.tsx` - Auto-expanding textarea with send button
+  - `side-pane.tsx` - Inspector panel with collapsible sections
+  - `theme-toggle.tsx` - Dark/light mode toggle
+  - `loading-overlay.tsx` - Full-screen loading indicator
+  - `error-banner.tsx` - Dismissible error notification
+  - `empty-state.tsx` - Placeholder when no messages
 
-### Frontend Architecture
-- **Framework**: React 18 with TypeScript, bundled using Vite
-- **Routing**: Wouter for lightweight client-side routing
-- **State Management**: TanStack React Query for server state, local React state for UI
-- **Styling**: Tailwind CSS with CSS variables for theming (light/dark mode support)
-- **Component Library**: shadcn/ui components built on Radix UI primitives
-- **Design Pattern**: Component-based architecture with separation between UI components, pages, and hooks
+### Backend (Express)
+- `server/routes.ts` - API endpoints:
+  - `GET /api/models` - Returns static list of available models
+  - `POST /api/webhook` - Proxies messages to n8n webhook
 
-### Backend Architecture
-- **Runtime**: Node.js with Express.js
-- **Language**: TypeScript compiled with tsx for development, esbuild for production
-- **API Pattern**: RESTful endpoints under `/api/*` prefix
-- **Key Endpoints**:
-  - `GET /api/models` - Returns available Cerebras model list
-  - `POST /api/webhook` - Proxies requests to external n8n webhook
+### Shared
+- `shared/schema.ts` - TypeScript types and Zod schemas for ChatMessage, WebhookRequest, etc.
 
-### Data Flow
-1. User selects a model from dropdown populated by `/api/models`
-2. User sends a message which triggers POST to `/api/webhook`
-3. Backend proxies request to n8n webhook URL
-4. Response contains Tool_Call_Response, Intent_Analyzer_Response, and Runtime_Prompt_Response
-5. Chat messages are stored in React state (no backend persistence)
-6. Side pane displays detailed metadata from Intent Analyzer and Runtime Prompt responses
+## Available Models
+1. meta-llama/llama-3.1-8b-instruct
+2. meta-llama/llama-3.3-70b-instruct
+3. qwen/qwen3-32b
+4. qwen/qwen3-235b-a22b-2507
+5. openai/gpt-oss-120b
+6. z-ai/glm-4.6
 
-### Build System
-- **Development**: Vite dev server with HMR, proxied through Express
-- **Production**: Vite builds frontend to `dist/public`, esbuild bundles server to `dist/index.cjs`
-- **Path Aliases**: `@/` maps to `client/src/`, `@shared/` maps to `shared/`
+## Webhook Integration
+- **URL**: https://n8n.dev01.modelmatrix.ai/webhook-test/86f31db0-921a-40d5-b6a7-6dc4ec542705
+- **Method**: POST
+- **Body**: `{ model_name: string, first_message: string }`
+- **Response**: Array containing Tool_Call_Response, Intent_Analyzer_Response, Runtime_Prompt_Response
 
-### Database Schema
-- Drizzle ORM is configured with PostgreSQL but currently uses in-memory storage
-- Schema defined in `shared/schema.ts` contains Zod validation schemas for:
-  - Chat messages with role, text, timestamps, and optional tool responses
-  - Cerebras model metadata
-  - Webhook request/response structures
-- User storage interface exists but chat persistence is not implemented
+## Design System
+- **Primary**: #6366F1 (Indigo)
+- **Secondary**: #8B5CF6 (Purple)
+- **Accent**: #10B981 (Green)
+- **Typography**: Inter (sans), IBM Plex Mono (monospace)
+- **Dark mode**: Full support with proper contrast
 
-## External Dependencies
+## Running the Application
+```bash
+npm run dev
+```
+Starts Express server on port 5000 with Vite dev server for frontend.
 
-### Third-Party Services
-- **n8n Webhook**: External workflow automation endpoint at `https://n8n.dev01.modelmatrix.ai/webhook-test/86f31db0-921a-40d5-b6a7-6dc4ec542705`
-  - Receives `model_name` and `first_message` in POST body
-  - Returns array with Tool_Call_Response, Intent_Analyzer_Response, Runtime_Prompt_Response
-
-### Database
-- **PostgreSQL**: Configured via `DATABASE_URL` environment variable
-- **Drizzle ORM**: Database toolkit with schema in `shared/schema.ts`
-- **Migrations**: Stored in `./migrations` directory, push with `npm run db:push`
-
-### Key Libraries
-- **UI**: Radix UI primitives, Lucide icons, class-variance-authority for variants
-- **Forms**: React Hook Form with Zod resolver
-- **Data Fetching**: TanStack React Query
-- **Styling**: Tailwind CSS with custom design tokens defined in CSS variables
+## Environment Variables
+- `OPENROUTER_KEY` - API key for OpenRouter (used by n8n webhook)
