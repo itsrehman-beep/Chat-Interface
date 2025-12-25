@@ -1,40 +1,25 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 
-const CEREBRAS_API_URL = "https://api.cerebras.ai/v1/models";
 const WEBHOOK_URL = "https://n8n.dev01.modelmatrix.ai/webhook-test/86f31db0-921a-40d5-b6a7-6dc4ec542705";
+
+const AVAILABLE_MODELS = [
+  "meta-llama/llama-3.1-8b-instruct",
+  "meta-llama/llama-3.3-70b-instruct",
+  "qwen/qwen3-32b",
+  "qwen/qwen3-235b-a22b-2507",
+  "openai/gpt-oss-120b",
+  "z-ai/glm-4.6",
+];
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
   app.get("/api/models", async (req, res) => {
-    try {
-      const response = await fetch(CEREBRAS_API_URL, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Cerebras API error:", errorText);
-        return res.status(response.status).json({
-          error: "Failed to fetch models from Cerebras API",
-          details: errorText,
-        });
-      }
-
-      const data = await response.json();
-      res.json(data);
-    } catch (error) {
-      console.error("Error fetching models:", error);
-      res.status(500).json({
-        error: "Failed to fetch models",
-        message: error instanceof Error ? error.message : "Unknown error",
-      });
-    }
+    res.json({
+      data: AVAILABLE_MODELS.map((id) => ({ id })),
+    });
   });
 
   app.post("/api/webhook", async (req, res) => {

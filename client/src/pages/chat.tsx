@@ -50,10 +50,35 @@ export default function ChatPage() {
           : JSON.stringify(toolResponse.error);
       }
 
+      const extractAssistantText = (): string => {
+        if (runtimePrompt?.response) {
+          return String(runtimePrompt.response);
+        }
+        if (runtimePrompt?.content) {
+          return String(runtimePrompt.content);
+        }
+        if (runtimePrompt?.message) {
+          return String(runtimePrompt.message);
+        }
+        if (intentAnalyzer?.response) {
+          return String(intentAnalyzer.response);
+        }
+        if (intentAnalyzer?.intent) {
+          return `Intent: ${intentAnalyzer.intent}`;
+        }
+        if (toolResponse) {
+          const tools = Array.isArray(toolResponse) ? toolResponse : [toolResponse];
+          if (tools.length > 0) {
+            return `Retrieved ${tools.length} result${tools.length > 1 ? "s" : ""} from tool call`;
+          }
+        }
+        return "Response processed successfully";
+      };
+
       const assistantMessage: ChatMessage = {
         id: crypto.randomUUID(),
         role: "assistant",
-        text: "Response received from webhook",
+        text: extractAssistantText(),
         timestamp: Date.now(),
         toolResponse: Array.isArray(toolResponse) ? toolResponse : toolResponse ? [toolResponse] : undefined,
         intentAnalyzer,
