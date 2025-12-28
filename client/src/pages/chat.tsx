@@ -202,18 +202,20 @@ export default function ChatPage() {
       currentAgent: string | null; 
       conversation: { role: "user" | "assistant"; content: string }[];
     }) => {
+      const HARDCODED_SESSION_ID = "c2c1dafa-273f-4c0f-bf5a-8ef8232a4cb5";
+      
       let payload;
       if (isFirstMessage) {
         payload = {
           first_message: message,
-          session_id: sessionId,
+          session_id: HARDCODED_SESSION_ID,
           model,
         };
       } else {
         payload = {
           first_message: null,
           current_agent: currentAgent,
-          session_id: sessionId,
+          session_id: HARDCODED_SESSION_ID,
           model,
           conversation,
         };
