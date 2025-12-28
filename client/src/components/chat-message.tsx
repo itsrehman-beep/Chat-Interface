@@ -86,6 +86,9 @@ function detectResponseType(obj: Record<string, unknown>): string {
   if ('FromCurrency' in obj && 'ToCurrency' in obj && 'Rate' in obj) {
     return 'ExchangeRate';
   }
+  if ('BeneficiaryId' in obj || ('BeneficiaryName' in obj && 'AccountNumber' in obj)) {
+    return 'Beneficiary';
+  }
   if ('SessionId' in obj && 'ExpiryTime' in obj) {
     return 'LoginResponse';
   }
@@ -206,6 +209,35 @@ function renderCustomer(obj: Record<string, unknown>, index: number) {
   );
 }
 
+function renderBeneficiary(obj: Record<string, unknown>, index: number) {
+  return (
+    <div key={index} className="bg-card border border-card-border rounded-md p-3">
+      <div className="flex items-center gap-3">
+        <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/30">
+          <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+        </div>
+        <div className="flex-1 space-y-1">
+          <p className="font-medium">{obj.BeneficiaryName as string || obj.Name as string || 'Beneficiary'}</p>
+          {typeof obj.AccountNumber === 'string' && (
+            <p className="text-sm text-muted-foreground font-mono">{obj.AccountNumber}</p>
+          )}
+          {typeof obj.BankName === 'string' && (
+            <p className="text-xs text-muted-foreground">{obj.BankName}</p>
+          )}
+          <div className="flex items-center gap-2 flex-wrap">
+            {typeof obj.BeneficiaryId === 'string' && (
+              <span className="text-xs text-muted-foreground font-mono">ID: {obj.BeneficiaryId}</span>
+            )}
+            {typeof obj.Status === 'string' && (
+              <Badge variant="outline" className="text-xs">{obj.Status}</Badge>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function renderBill(obj: Record<string, unknown>, index: number) {
   const amount = obj.Amount as number;
   const currency = (obj.Currency as string) || 'USD';
@@ -291,6 +323,20 @@ function renderGenericObject(obj: Record<string, unknown>, index: number) {
           displayValue = formatCurrency(value);
         } else if (isDate && typeof value === 'string') {
           displayValue = formatDate(value);
+        } else if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object') {
+          return (
+            <div key={key} className="space-y-2">
+              <span className="text-muted-foreground text-sm">{key}: ({value.length} items)</span>
+              <div className="space-y-2 pl-2 border-l-2 border-border">
+                {value.map((item, itemIndex) => {
+                  if (typeof item === 'object' && item !== null) {
+                    return renderSingleItem(item as Record<string, unknown>, index * 1000 + itemIndex);
+                  }
+                  return null;
+                })}
+              </div>
+            </div>
+          );
         } else if (typeof value === "object") {
           displayValue = JSON.stringify(value, null, 2);
         } else {
@@ -314,7 +360,7 @@ function renderGenericObject(obj: Record<string, unknown>, index: number) {
   );
 }
 
-function renderToolResponse(obj: Record<string, unknown>, index: number) {
+function renderSingleItem(obj: Record<string, unknown>, index: number): JSX.Element {
   const type = detectResponseType(obj);
   
   switch (type) {
@@ -330,9 +376,28 @@ function renderToolResponse(obj: Record<string, unknown>, index: number) {
       return renderBill(obj, index);
     case 'ExchangeRate':
       return renderExchangeRate(obj, index);
+    case 'Beneficiary':
+      return renderBeneficiary(obj, index);
     default:
       return renderGenericObject(obj, index);
   }
+}
+
+function renderToolResponse(item: unknown, index: number): JSX.Element | JSX.Element[] | null {
+  if (Array.isArray(item)) {
+    return item.map((subItem, subIndex) => {
+      if (typeof subItem === 'object' && subItem !== null) {
+        return renderSingleItem(subItem as Record<string, unknown>, index * 1000 + subIndex);
+      }
+      return null;
+    }).filter(Boolean) as JSX.Element[];
+  }
+  
+  if (typeof item === 'object' && item !== null) {
+    return renderSingleItem(item as Record<string, unknown>, index);
+  }
+  
+  return null;
 }
 
 export function ChatMessageComponent({ message, isSelected, onClick }: ChatMessageProps) {
@@ -382,12 +447,9 @@ export function ChatMessageComponent({ message, isSelected, onClick }: ChatMessa
 
         {hasToolResponse && (
           <div className="w-full space-y-2">
-            {message.toolResponse.map((tool: unknown, index: number) => {
-              if (typeof tool === "object" && tool !== null) {
-                return renderToolResponse(tool as Record<string, unknown>, index);
-              }
-              return null;
-            })}
+            {message.toolResponse.map((tool: unknown, index: number) => 
+              renderToolResponse(tool, index)
+            )}
           </div>
         )}
 
