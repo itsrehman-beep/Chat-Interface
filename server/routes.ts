@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 
 const WEBHOOK_URL =
-  "https://n8n.dev01.modelmatrix.ai/webhook-test/86f31db0-921a-40d5-b6a7-6dc4ec542705";
+  "https://n8n.dev01.modelmatrix.ai/webhook/d87c25a6-5ebe-4dbe-9f94-504eab7aa23b";
 
 const AVAILABLE_MODELS = [
   "meta-llama/llama-3.1-8b-instruct",
@@ -25,12 +25,35 @@ export async function registerRoutes(
 
   app.post("/api/webhook", async (req, res) => {
     try {
-      const { model_name, first_message } = req.body;
+      const { first_message, session_id, model, current_agent, conversation } = req.body;
 
-      if (!model_name || !first_message) {
+      if (!session_id || !model) {
         return res.status(400).json({
-          error: "Missing required fields: model_name and first_message",
+          error: "Missing required fields: session_id and model",
         });
+      }
+
+      let webhookPayload;
+      
+      if (first_message !== null && first_message !== undefined) {
+        webhookPayload = {
+          first_message,
+          session_id,
+          model,
+        };
+      } else {
+        if (!current_agent || !conversation) {
+          return res.status(400).json({
+            error: "Follow-up messages require current_agent and conversation",
+          });
+        }
+        webhookPayload = {
+          first_message: null,
+          current_agent,
+          session_id,
+          model,
+          conversation,
+        };
       }
 
       const response = await fetch(WEBHOOK_URL, {
@@ -38,10 +61,7 @@ export async function registerRoutes(
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          model_name,
-          first_message,
-        }),
+        body: JSON.stringify(webhookPayload),
       });
 
       if (!response.ok) {

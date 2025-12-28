@@ -1,0 +1,184 @@
+ok ive changed the webhook link to a permanently active one.
+
+These are some changes we have to make:
+
+when a user sends the first message in their chat it gets sent like this:
+
+{
+  "first_message": "can you show my bank accounts?",
+  "session_id": "c2c1dafa-273f-4c0f-bf5a-8ef8232a4cb5",
+  "model": "openai/gpt-oss-120b"
+}
+
+This is how it's response looks like: {
+    "Intent_Analyzer_Response": {
+        "MTX_SESSION_ID": "187379",
+        "MTX_USER_QUERY": "can you show my bank accounts?",
+        "MTX_SELECTED_AGENT": "FetchAccountsAgent",
+        "MTX_REASONING": "The user asks to see their bank accounts. This request aligns directly with the purpose of the **FetchAccountsAgent**, which is designed to retrieve and display a user's bank accounts, including account numbers, types, balances, and currencies.\n\n**Selected Agent:** FetchAccountsAgent",
+        "MTX_LLM": "openai/gpt-oss-120b",
+        "MTX_INPUT_TOKENS": 58510,
+        "MTX_OUTPUT_TOKENS": 157,
+        "MTX_PROCESSED_DATE": "28-12-2025 19:29:34.983+04:00"
+    },
+    "RuneTime_Prompt_Response": {
+        "id": "gen-1766935780-ISsRfZPhAV4jfSie6j5H",
+        "provider": "Cerebras",
+        "model": "openai/gpt-oss-120b",
+        "object": "chat.completion",
+        "created": 1766935780,
+        "choices": [
+            {
+                "logprobs": null,
+                "finish_reason": "stop",
+                "native_finish_reason": "stop",
+                "index": 0,
+                "message": {
+                    "role": "assistant",
+                    "content": "json\n{\n  \"type\": \"bank_accounts_carousel_widget\",\n  \"props\": {\n    \"accounts\": [\n      {\n        \"id\": \"acc-1\",\n        \"name\": \"Checking\",\n        \"accountNumber\": \"A0002\",\n        \"currency\": \"USD\",\n        \"balance\": \"$6,677.25\",\n        \"nickname\": \"Main Checking\"\n      },\n      {\n        \"id\": \"acc-2\",\n        \"name\": \"Savings\",\n        \"accountNumber\": \"A0007\",\n        \"currency\": \"RMB\",\n        \"balance\": \"¥34,813.04\",\n        \"nickname\": \"China Transactions\"\n      },\n      {\n        \"id\": \"acc-3\",\n        \"name\": \"Savings\",\n        \"accountNumber\": \"A0001\",\n        \"currency\": \"USD\",\n        \"balance\": \"$18,436.56\",\n        \"nickname\": \"Extra Savings\"\n      },\n      {\n        \"id\": \"acc-4\",\n        \"name\": \"CreditCard\",\n        \"accountNumber\": \"A0015\",\n        \"currency\": \"USD\",\n        \"balance\": \"$0.00\",\n        \"nickname\": \"Rewards Card\"\n      }\n    ]\n  }\n}",
+                    "refusal": null,
+                    "reasoning": "We have accounts list. Need to format using widget Bank Accounts Carousel. Provide widget payload with accounts array. Need fields: id, name, accountNumber, currency, balance, nickname. We have AccountId as account number, AccountType as name? Use AccountType for name. Balance: CalculatedBalance formatted with currency symbol? Could format as string with appropriate symbol. For simplicity, we can format as \"$6,677.25\" for USD, \"¥34,813.04\" for RMB, etc. Use two decimals. Let's compute.\n\nAccount 1: USD, balance 6677.249 => $6,677.25 (rounded). nickname Main Checking. accountNumber A0002.\n\nAccount 2: RMB, balance 34813.035 => ¥34,813.04 (RMB symbol ¥). nickname China Transactions. accountNumber A0007.\n\nAccount 3: USD, balance 18436.555 => $18,436.56. nickname Extra Savings. accountNumber A0001.\n\nAccount 4: USD, credit card balance 0 => $0.00. nickname Rewards Card. accountNumber A0015. Name: CreditCard.\n\nProvide widget.",
+                    "reasoning_details": [
+                        {
+                            "format": "unknown",
+                            "index": 0,
+                            "type": "reasoning.text",
+                            "text": "We have accounts list. Need to format using widget Bank Accounts Carousel. Provide widget payload with accounts array. Need fields: id, name, accountNumber, currency, balance, nickname. We have AccountId as account number, AccountType as name? Use AccountType for name. Balance: CalculatedBalance formatted with currency symbol? Could format as string with appropriate symbol. For simplicity, we can format as \"$6,677.25\" for USD, \"¥34,813.04\" for RMB, etc. Use two decimals. Let's compute.\n\nAccount 1: USD, balance 6677.249 => $6,677.25 (rounded). nickname Main Checking. accountNumber A0002.\n\nAccount 2: RMB, balance 34813.035 => ¥34,813.04 (RMB symbol ¥). nickname China Transactions. accountNumber A0007.\n\nAccount 3: USD, balance 18436.555 => $18,436.56. nickname Extra Savings. accountNumber A0001.\n\nAccount 4: USD, credit card balance 0 => $0.00. nickname Rewards Card. accountNumber A0015. Name: CreditCard.\n\nProvide widget."
+                        }
+                    ]
+                }
+            }
+        ],
+        "system_fingerprint": "fp_b39cfdb1b0484bd984f9",
+        "usage": {
+            "prompt_tokens": 8475,
+            "completion_tokens": 507,
+            "total_tokens": 8982,
+            "cost": 0.0033465,
+            "is_byok": false,
+            "prompt_tokens_details": {
+                "cached_tokens": 7679,
+                "audio_tokens": 0,
+                "video_tokens": 0
+            },
+            "cost_details": {
+                "upstream_inference_cost": null,
+                "upstream_inference_prompt_cost": 0.00296625,
+                "upstream_inference_completions_cost": 0.00038025
+            },
+            "completion_tokens_details": {
+                "reasoning_tokens": 243,
+                "image_tokens": 0
+            }
+        }
+    },
+    "Tool_Request_Response": {
+        "AccountId": "A0002",
+        "CustomerId": "C0001",
+        "AccountType": "Checking",
+        "Currency": "USD",
+        "Status": "Active",
+        "IBAN": "US09876543210987654321",
+        "CalculatedBalance": 6677.249,
+        "IsDefault": true,
+        "OverdraftLimit": 1000,
+        "AccountNickname": "Main Checking",
+        "AccountImageUrl": "http://bank-emulator-dev.prod-k8s.aiatcore.com/static/images/accounts/checking.png"
+    }
+}
+
+when it's a non-first message the chat history needs to be sent alongside it too, like this:
+
+{
+  "first_message": null,
+  "current_agent": "FetchAccountsAgent",
+  "session_id": "c2c1dafa-273f-4c0f-bf5a-8ef8232a4cb5",
+  "model": "openai/gpt-oss-120b",
+  "conversation": [
+    {
+      "role": "user",
+      "content": "Hi, can you show me my bank accounts and their balances?"
+    },
+    {
+      "role": "assistant",
+      "content": "Certainly! Here are your current linked accounts.\n\njson\n{\n  \"type\": \"bank_accounts_carousel_widget\",\n  \"props\": {\n    \"accounts\": [\n      { \"id\": \"acc-1\", \"nickname\": \"Main Checking\", \"balance\": \"$3,539.54\", \"currency\": \"USD\", \"accountNumber\": \"A0002\" }\n    ]\n  }\n}\n"
+    },
+    {
+      "role": "user",
+      "content": "Thanks. I actually need to pay my electricity bill now."
+    }
+  ]
+}
+
+And this is how its response looks like:
+
+{
+    "RuneTime_Prompt_Response": {
+        "id": "gen-1766936416-zFTqSp8pprRWnadIbmh1",
+        "provider": "Cerebras",
+        "model": "openai/gpt-oss-120b",
+        "object": "chat.completion",
+        "created": 1766936416,
+        "choices": [
+            {
+                "logprobs": null,
+                "finish_reason": "stop",
+                "native_finish_reason": "stop",
+                "index": 0,
+                "message": {
+                    "role": "assistant",
+                    "content": "Sure thing! I’ve got your default account ready:\n\n- **Account:** A0002 (Main Checking)  \n- **Currency:** USD  \n- **Balance:** $3,539.54  \n\nLet me know if you’d like to use a different account for this payment, or if I should go ahead with the default one.",
+                    "refusal": null,
+                    "reasoning": "We have default account A0002. Next step: ask user if they'd like to use a different account. According to workflow, we must ask but not yes/no; invite them to indicate preference. So ask: \"Would you like to use a different account?\" but phrasing as \"Let me know if you'd like to use a different account\". Then capture response.",
+                    "reasoning_details": [
+                        {
+                            "format": "unknown",
+                            "index": 0,
+                            "type": "reasoning.text",
+                            "text": "We have default account A0002. Next step: ask user if they'd like to use a different account. According to workflow, we must ask but not yes/no; invite them to indicate preference. So ask: \"Would you like to use a different account?\" but phrasing as \"Let me know if you'd like to use a different account\". Then capture response."
+                        }
+                    ]
+                }
+            }
+        ],
+        "system_fingerprint": "fp_b39cfdb1b0484bd984f9",
+        "usage": {
+            "prompt_tokens": 9386,
+            "completion_tokens": 151,
+            "total_tokens": 9537,
+            "cost": 0.00339835,
+            "is_byok": false,
+            "prompt_tokens_details": {
+                "cached_tokens": 8447,
+                "audio_tokens": 0,
+                "video_tokens": 0
+            },
+            "cost_details": {
+                "upstream_inference_cost": null,
+                "upstream_inference_prompt_cost": 0.0032851,
+                "upstream_inference_completions_cost": 0.00011325
+            },
+            "completion_tokens_details": {
+                "reasoning_tokens": 82,
+                "image_tokens": 0
+            }
+        }
+    },
+    "Tool_Request_Response": {
+        "AccountId": "A0002",
+        "CustomerId": "C0001",
+        "AccountType": "Checking",
+        "Currency": "USD",
+        "Status": "Active",
+        "IBAN": "US09876543210987654321",
+        "IsDefault": true,
+        "OverdraftLimit": 1000,
+        "AccountNickname": "Main Checking",
+        "AccountImageUrl": "/static/images/accounts/checking.png"
+    }
+}
+
+ 
+
+As you can see, the current agent is decided by the response from the Webhook, also when we a user clicks a message response to see the Runtime Reasoning (remember Intent Analyzer response only exists for first messages!), make the reasoning part the focus with the other fields being expandable but by default retracted 
+

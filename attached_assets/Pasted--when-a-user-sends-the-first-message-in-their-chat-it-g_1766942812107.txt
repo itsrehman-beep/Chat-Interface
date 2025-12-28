@@ -1,0 +1,354 @@
+
+when a user sends the first message in their chat it gets sent like this:
+
+{
+  "first_message": "can you show my bank accounts?",
+  "session_id": "c2c1dafa-273f-4c0f-bf5a-8ef8232a4cb5",
+  "model": "openai/gpt-oss-120b"
+}
+
+This is how it's response looks like: {
+    "Intent_Analyzer_Response": {
+        "MTX_SESSION_ID": "187728",
+        "MTX_USER_QUERY": "can you show my bank accounts?",
+        "MTX_SELECTED_AGENT": "FetchAccountsAgent",
+        "MTX_REASONING": "The user asks to see their bank accounts. This request aligns directly with the purpose of the **FetchAccountsAgent**, which is designed to retrieve and display a user's bank accounts, including account numbers, types, balances, and currencies.\n\n**Selected Agent:** FetchAccountsAgent",
+        "MTX_LLM": "openai/gpt-oss-120b",
+        "MTX_INPUT_TOKENS": 58510,
+        "MTX_OUTPUT_TOKENS": 157,
+        "MTX_PROCESSED_DATE": "28-12-2025 21:25:11.292+04:00"
+    },
+    "RunTime_Prompt_Response": [
+        {
+            "role": "assistant",
+            "content": "",
+            "refusal": null,
+            "reasoning": "The user wants to view bank accounts. This is within scope. Need to call GetAccounts tool, then format using Bank Accounts Carousel widget. Follow workflow: call GetAccounts, parse response, then output widget. Let's call tool.",
+            "tool_calls": [
+                {
+                    "function": {
+                        "name": "GetAccounts",
+                        "arguments": "{}"
+                    },
+                    "type": "function",
+                    "id": "8514d2a27",
+                    "index": 0
+                }
+            ],
+            "reasoning_details": [
+                {
+                    "format": "unknown",
+                    "index": 0,
+                    "type": "reasoning.text",
+                    "text": "The user wants to view bank accounts. This is within scope. Need to call GetAccounts tool, then format using Bank Accounts Carousel widget. Follow workflow: call GetAccounts, parse response, then output widget. Let's call tool."
+                }
+            ],
+            "finish_reason": "tool_calls",
+            "usage": {
+                "prompt_tokens": 8092,
+                "completion_tokens": 66,
+                "total_tokens": 8158,
+                "cost": 0.0028817,
+                "is_byok": false,
+                "prompt_tokens_details": {
+                    "cached_tokens": 7679,
+                    "audio_tokens": 0,
+                    "video_tokens": 0
+                },
+                "cost_details": {
+                    "upstream_inference_cost": null,
+                    "upstream_inference_prompt_cost": 0.0028322,
+                    "upstream_inference_completions_cost": 0.0000495
+                },
+                "completion_tokens_details": {
+                    "reasoning_tokens": 57,
+                    "image_tokens": 0
+                }
+            }
+        },
+        {
+            "role": "assistant",
+            "content": "json\n{\n  \"type\": \"bank_accounts_carousel_widget\",\n  \"props\": {\n    \"accounts\": [\n      {\n        \"id\": \"A0002\",\n        \"name\": \"Checking\",\n        \"accountNumber\": \"A0002\",\n        \"currency\": \"USD\",\n        \"balance\": \"$6,677.25\",\n        \"nickname\": \"Main Checking\"\n      },\n      {\n        \"id\": \"A0007\",\n        \"name\": \"Savings\",\n        \"accountNumber\": \"A0007\",\n        \"currency\": \"RMB\",\n        \"balance\": \"¥34,813.04\",\n        \"nickname\": \"China Transactions\"\n      },\n      {\n        \"id\": \"A0001\",\n        \"name\": \"Savings\",\n        \"accountNumber\": \"A0001\",\n        \"currency\": \"USD\",\n        \"balance\": \"$18,436.56\",\n        \"nickname\": \"Extra Savings\"\n      },\n      {\n        \"id\": \"A0015\",\n        \"name\": \"CreditCard\",\n        \"accountNumber\": \"A0015\",\n        \"currency\": \"USD\",\n        \"balance\": \"$0.00\",\n        \"nickname\": \"Rewards Card\"\n      }\n    ]\n  }\n}",
+            "refusal": null,
+            "reasoning": "We have accounts list. Need to format using widget Bank Accounts Carousel. Provide widget payload with accounts array. Need fields: id, name, accountNumber, currency, balance, nickname. We have AccountId as account number, AccountType as name? Use AccountType for name. Balance: CalculatedBalance formatted with currency symbol? Could format as string with appropriate symbol. For simplicity, we can format as \"$6,677.25\" for USD, \"¥34,813.04\" for RMB, etc. Use two decimals. Let's compute.\n\nAccount 1: USD 6677.249 => $6,677.25 (rounded). nickname Main Checking. accountNumber A0002.\n\nAccount 2: RMB 34813.035 => ¥34,813.04 (RMB symbol ¥). nickname China Transactions. accountNumber A0007.\n\nAccount 3: USD 18436.555 => $18,436.56. nickname Extra Savings. accountNumber A0001.\n\nAccount 4: USD 0 => $0.00. nickname Rewards Card. accountNumber A0015. type CreditCard, name maybe \"Credit Card\". Use AccountType.\n\nProvide widget.\n\n",
+            "reasoning_details": [
+                {
+                    "format": "unknown",
+                    "index": 0,
+                    "type": "reasoning.text",
+                    "text": "We have accounts list. Need to format using widget Bank Accounts Carousel. Provide widget payload with accounts array. Need fields: id, name, accountNumber, currency, balance, nickname. We have AccountId as account number, AccountType as name? Use AccountType for name. Balance: CalculatedBalance formatted with currency symbol? Could format as string with appropriate symbol. For simplicity, we can format as \"$6,677.25\" for USD, \"¥34,813.04\" for RMB, etc. Use two decimals. Let's compute.\n\nAccount 1: USD 6677.249 => $6,677.25 (rounded). nickname Main Checking. accountNumber A0002.\n\nAccount 2: RMB 34813.035 => ¥34,813.04 (RMB symbol ¥). nickname China Transactions. accountNumber A0007.\n\nAccount 3: USD 18436.555 => $18,436.56. nickname Extra Savings. accountNumber A0001.\n\nAccount 4: USD 0 => $0.00. nickname Rewards Card. accountNumber A0015. type CreditCard, name maybe \"Credit Card\". Use AccountType.\n\nProvide widget.\n\n"
+                }
+            ],
+            "finish_reason": "stop",
+            "usage": {
+                "prompt_tokens": 8475,
+                "completion_tokens": 506,
+                "total_tokens": 8981,
+                "cost": 0.00334575,
+                "is_byok": false,
+                "prompt_tokens_details": {
+                    "cached_tokens": 7679,
+                    "audio_tokens": 0,
+                    "video_tokens": 0
+                },
+                "cost_details": {
+                    "upstream_inference_cost": null,
+                    "upstream_inference_prompt_cost": 0.00296625,
+                    "upstream_inference_completions_cost": 0.0003795
+                },
+                "completion_tokens_details": {
+                    "reasoning_tokens": 243,
+                    "image_tokens": 0
+                }
+            }
+        }
+    ],
+    "Tool_Request_Response": {
+        "AccountId": "A0002",
+        "CustomerId": "C0001",
+        "AccountType": "Checking",
+        "Currency": "USD",
+        "Status": "Active",
+        "IBAN": "US09876543210987654321",
+        "CalculatedBalance": 6677.249,
+        "IsDefault": true,
+        "OverdraftLimit": 1000,
+        "AccountNickname": "Main Checking",
+        "AccountImageUrl": "http://bank-emulator-dev.prod-k8s.aiatcore.com/static/images/accounts/checking.png"
+    }
+}
+
+when it's a non-first message the chat history needs to be sent alongside it too, like this:
+
+{
+  "first_message": null,
+  "current_agent": "FetchAccountsAgent",
+  "session_id": "c2c1dafa-273f-4c0f-bf5a-8ef8232a4cb5",
+  "model": "openai/gpt-oss-120b",
+  "conversation": [
+    {
+      "role": "user",
+      "content": "Hi, can you show me my bank accounts and their balances?"
+    },
+    {
+      "role": "assistant",
+      "content": "Certainly! Here are your current linked accounts.\n\njson\n{\n  \"type\": \"bank_accounts_carousel_widget\",\n  \"props\": {\n    \"accounts\": [\n      { \"id\": \"acc-1\", \"nickname\": \"Main Checking\", \"balance\": \"$3,539.54\", \"currency\": \"USD\", \"accountNumber\": \"A0002\" }\n    ]\n  }\n}\n"
+    },
+    {
+      "role": "user",
+      "content": "Thanks. Can you show me my last transaction with my default account?"
+    }
+  ]
+}
+
+And this is how its response looks like:
+
+{
+    "RunTime_Prompt_Response": [
+        {
+            "role": "assistant",
+            "content": "",
+            "refusal": null,
+            "reasoning": "The user wants to see last transaction with default account. According to workflow: retrieve default account, then fetch its transactions, then present. We need to call GetDefaultAccount, then GetAccountTransactionsByAccountId with that account number. Probably limit=1 to get last transaction. Use default page=1 limit=1. Then present using List Transactions widget. Let's call GetDefaultAccount.",
+            "tool_calls": [
+                {
+                    "function": {
+                        "name": "GetDefaultAccount",
+                        "arguments": "{}"
+                    },
+                    "type": "function",
+                    "id": "65dbd3467",
+                    "index": 0
+                }
+            ],
+            "reasoning_details": [
+                {
+                    "format": "unknown",
+                    "index": 0,
+                    "type": "reasoning.text",
+                    "text": "The user wants to see last transaction with default account. According to workflow: retrieve default account, then fetch its transactions, then present. We need to call GetDefaultAccount, then GetAccountTransactionsByAccountId with that account number. Probably limit=1 to get last transaction. Use default page=1 limit=1. Then present using List Transactions widget. Let's call GetDefaultAccount."
+                }
+            ],
+            "finish_reason": "tool_calls",
+            "usage": {
+                "prompt_tokens": 8585,
+                "completion_tokens": 99,
+                "total_tokens": 8684,
+                "cost": 0.003079,
+                "is_byok": false,
+                "prompt_tokens_details": {
+                    "cached_tokens": 8063,
+                    "audio_tokens": 0,
+                    "video_tokens": 0
+                },
+                "cost_details": {
+                    "upstream_inference_cost": null,
+                    "upstream_inference_prompt_cost": 0.00300475,
+                    "upstream_inference_completions_cost": 0.00007425
+                },
+                "completion_tokens_details": {
+                    "reasoning_tokens": 100,
+                    "image_tokens": 0
+                }
+            }
+        },
+        {
+            "role": "assistant",
+            "content": "",
+            "refusal": null,
+            "reasoning": "Now fetch transactions for default account A0002.",
+            "tool_calls": [
+                {
+                    "function": {
+                        "name": "GetAccountTransactionsByAccountId",
+                        "arguments": "{\n  \"account_id\": \"A0002\",\n  \"page\": 1,\n  \"limit\": 5\n}"
+                    },
+                    "type": "function",
+                    "id": "9c0eff7f0",
+                    "index": 0
+                }
+            ],
+            "reasoning_details": [
+                {
+                    "format": "unknown",
+                    "index": 0,
+                    "type": "reasoning.text",
+                    "text": "Now fetch transactions for default account A0002."
+                }
+            ],
+            "finish_reason": "tool_calls",
+            "usage": {
+                "prompt_tokens": 8797,
+                "completion_tokens": 59,
+                "total_tokens": 8856,
+                "cost": 0.0031232,
+                "is_byok": false,
+                "prompt_tokens_details": {
+                    "cached_tokens": 8063,
+                    "audio_tokens": 0,
+                    "video_tokens": 0
+                },
+                "cost_details": {
+                    "upstream_inference_cost": null,
+                    "upstream_inference_prompt_cost": 0.00307895,
+                    "upstream_inference_completions_cost": 0.00004425
+                },
+                "completion_tokens_details": {
+                    "reasoning_tokens": 13,
+                    "image_tokens": 0
+                }
+            }
+        },
+        {
+            "role": "assistant",
+            "content": "Here’s the most recent transaction on your default account:\n\njson\n{\n  \"type\": \"list_transactions_widget\",\n  \"props\": {\n    \"transactions\": [\n      {\n        \"id\": \"T0028\",\n        \"merchant\": \"External transfer test\",\n        \"date\": \"Oct 9, 2025\",\n        \"amount\": \"-$25 USD\",\n        \"isDebit\": true\n      }\n    ]\n  }\n}",
+            "refusal": null,
+            "reasoning": "We need to show last transaction (most recent). The list appears sorted maybe descending? The dates: T0002 (2025-09-06), T0006 (2025-10-03), T0023 (2025-10-08), T0026 (2025-10-09 07:44), T0028 (2025-10-09 07:48). The most recent is T0028 on 2025-10-09 07:48:56. Show details: date, amount, currency, description, type (Debit). Use List Transactions widget? Could show single transaction. Use List Transactions widget with one transaction. Provide transaction details. Use isDebit true. Provide merchant maybe description. Use amount with sign? The widget expects amount string and isDebit boolean. Provide amount \"-$25\". Provide date formatted human-friendly. Use date \"Oct 9, 2025\". Provide merchant \"External transfer test\". Let's construct widget.",
+            "reasoning_details": [
+                {
+                    "format": "unknown",
+                    "index": 0,
+                    "type": "reasoning.text",
+                    "text": "We need to show last transaction (most recent). The list appears sorted maybe descending? The dates: T0002 (2025-09-06), T0006 (2025-10-03), T0023 (2025-10-08), T0026 (2025-10-09 07:44), T0028 (2025-10-09 07:48). The most recent is T0028 on 2025-10-09 07:48:56. Show details: date, amount, currency, description, type (Debit). Use List Transactions widget? Could show single transaction. Use List Transactions widget with one transaction. Provide transaction details. Use isDebit true. Provide merchant maybe description. Use amount with sign? The widget expects amount string and isDebit boolean. Provide amount \"-$25\". Provide date formatted human-friendly. Use date \"Oct 9, 2025\". Provide merchant \"External transfer test\". Let's construct widget."
+                }
+            ],
+            "finish_reason": "stop",
+            "usage": {
+                "prompt_tokens": 9176,
+                "completion_tokens": 301,
+                "total_tokens": 9477,
+                "cost": 0.00343735,
+                "is_byok": false,
+                "prompt_tokens_details": {
+                    "cached_tokens": 0,
+                    "audio_tokens": 0,
+                    "video_tokens": 0
+                },
+                "cost_details": {
+                    "upstream_inference_cost": null,
+                    "upstream_inference_prompt_cost": 0.0032116,
+                    "upstream_inference_completions_cost": 0.00022575
+                },
+                "completion_tokens_details": {
+                    "reasoning_tokens": 188,
+                    "image_tokens": 0
+                }
+            }
+        }
+    ],
+    "Tool_Request_Response": {
+        "items": [
+            {
+                "TransactionId": "T0002",
+                "AccountId": "A0002",
+                "Amount": 2000,
+                "Currency": "USD",
+                "RecipientAmount": -2000,
+                "RecipientCurrency": "USD",
+                "DateTime": "2025-09-06T05:58:32.893159",
+                "Type": "Credit",
+                "Subtype": "Transfer",
+                "Description": "Initial deposit"
+            },
+            {
+                "TransactionId": "T0006",
+                "AccountId": "A0002",
+                "CardId": "CARD0002",
+                "Amount": -45.99,
+                "Currency": "USD",
+                "RecipientAmount": 45.99,
+                "RecipientCurrency": "USD",
+                "DateTime": "2025-10-03T05:58:32.893159",
+                "Type": "Debit",
+                "Subtype": "Purchase",
+                "Description": "Online purchase at Amazon"
+            },
+            {
+                "TransactionId": "T0023",
+                "AccountId": "A0002",
+                "BeneficiaryId": "BEN0001",
+                "BeneficiaryName": "Alice Johnson",
+                "Amount": -100,
+                "Currency": "USD",
+                "RecipientAmount": 100,
+                "RecipientCurrency": "USD",
+                "DateTime": "2025-10-08T07:13:12.284241",
+                "Type": "Debit",
+                "Subtype": "Transfer",
+                "Description": "birthday gift"
+            },
+            {
+                "TransactionId": "T0026",
+                "AccountId": "A0002",
+                "RecipientName": "Test Recipient",
+                "RecipientIBAN": "CN55556666777788889999",
+                "Amount": -100,
+                "Currency": "USD",
+                "RecipientAmount": 100,
+                "RecipientCurrency": "USD",
+                "DateTime": "2025-10-09T07:44:21.881324",
+                "Type": "Debit",
+                "Subtype": "Transfer",
+                "Description": "Testing internal transfer detection"
+            },
+            {
+                "TransactionId": "T0028",
+                "AccountId": "A0002",
+                "RecipientName": "External Bank Account",
+                "RecipientIBAN": "GB99XXXX99999999999999",
+                "Amount": -25,
+                "Currency": "USD",
+                "RecipientAmount": 25,
+                "RecipientCurrency": "USD",
+                "DateTime": "2025-10-09T07:48:56.564402",
+                "Type": "Debit",
+                "Subtype": "Transfer",
+                "Description": "External transfer test"
+            }
+        ],
+        "total": 138,
+        "page": 1,
+        "limit": 5,
+        "total_pages": 28
+    }
+}

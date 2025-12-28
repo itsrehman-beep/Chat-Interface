@@ -41,9 +41,35 @@ export const chatSessionSchema = z.object({
   id: z.string(),
   title: z.string(),
   modelId: z.string().nullable(),
+  currentAgent: z.string().nullable(),
   messages: z.array(chatMessageSchema),
   createdAt: z.number(),
   updatedAt: z.number(),
 });
 
 export type ChatSession = z.infer<typeof chatSessionSchema>;
+
+export const webhookFirstMessageRequestSchema = z.object({
+  first_message: z.string(),
+  session_id: z.string(),
+  model: z.string(),
+});
+
+export type WebhookFirstMessageRequest = z.infer<typeof webhookFirstMessageRequestSchema>;
+
+export const conversationMessageSchema = z.object({
+  role: z.enum(["user", "assistant"]),
+  content: z.string(),
+});
+
+export type ConversationMessage = z.infer<typeof conversationMessageSchema>;
+
+export const webhookFollowUpRequestSchema = z.object({
+  first_message: z.null(),
+  current_agent: z.string(),
+  session_id: z.string(),
+  model: z.string(),
+  conversation: z.array(conversationMessageSchema),
+});
+
+export type WebhookFollowUpRequest = z.infer<typeof webhookFollowUpRequestSchema>;

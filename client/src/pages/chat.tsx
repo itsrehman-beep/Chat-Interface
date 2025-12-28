@@ -21,6 +21,7 @@ function createNewSession(): ChatSession {
     id: crypto.randomUUID(),
     title: "New Chat",
     modelId: null,
+    currentAgent: null,
     messages: [],
     createdAt: Date.now(),
     updatedAt: Date.now(),
@@ -157,7 +158,7 @@ export default function ChatPage() {
 
   const models = modelsQuery.data?.data?.map((m) => m.id) || [];
 
-  const addMessageToSession = useCallback((sessionId: string, message: ChatMessage) => {
+  const addMessageToSession = useCallback((sessionId: string, message: ChatMessage, newAgent?: string | null) => {
     setState((prev) => ({
       ...prev,
       sessions: prev.sessions.map((s) =>
@@ -166,6 +167,7 @@ export default function ChatPage() {
               ...s,
               messages: [...s.messages, message],
               title: generateSessionTitle([...s.messages, message]) || s.title,
+              currentAgent: newAgent !== undefined ? newAgent : s.currentAgent,
               updatedAt: Date.now(),
             }
           : s
@@ -173,12 +175,51 @@ export default function ChatPage() {
     }));
   }, []);
 
+  const buildConversationHistory = useCallback((sessionMessages: ChatMessage[]): { role: "user" | "assistant"; content: string }[] => {
+    return sessionMessages.map((msg) => {
+      let content = msg.text;
+      if (msg.role === "assistant" && msg.toolResponse) {
+        const toolJson = JSON.stringify(msg.toolResponse, null, 2);
+        content = `${msg.text}\n\njson\n${toolJson}\n`;
+      }
+      return { role: msg.role, content };
+    });
+  }, []);
+
   const sendMessageMutation = useMutation({
-    mutationFn: async ({ sessionId, model, message }: { sessionId: string; model: string; message: string }) => {
-      const response = await apiRequest("POST", "/api/webhook", {
-        model_name: model,
-        first_message: message,
-      });
+    mutationFn: async ({ 
+      sessionId, 
+      model, 
+      message, 
+      isFirstMessage, 
+      currentAgent, 
+      conversation 
+    }: { 
+      sessionId: string; 
+      model: string; 
+      message: string; 
+      isFirstMessage: boolean; 
+      currentAgent: string | null; 
+      conversation: { role: "user" | "assistant"; content: string }[];
+    }) => {
+      let payload;
+      if (isFirstMessage) {
+        payload = {
+          first_message: message,
+          session_id: sessionId,
+          model,
+        };
+      } else {
+        payload = {
+          first_message: null,
+          current_agent: currentAgent,
+          session_id: sessionId,
+          model,
+          conversation,
+        };
+      }
+      
+      const response = await apiRequest("POST", "/api/webhook", payload);
       return { response, sessionId };
     },
     onSuccess: async ({ response, sessionId }) => {
@@ -186,9 +227,9 @@ export default function ChatPage() {
       
       const responseItem = Array.isArray(data) ? data[0] : data;
       
-      const toolResponse = responseItem?.Tool_Call_Response;
+      const toolResponse = responseItem?.Tool_Request_Response;
       const intentAnalyzer = responseItem?.Intent_Analyzer_Response;
-      const runtimePrompt = responseItem?.Runtime_Prompt_Response;
+      const runtimePrompt = responseItem?.RunTime_Prompt_Response;
       
       let errorMessage: string | undefined;
       if (toolResponse?.error) {
@@ -197,27 +238,36 @@ export default function ChatPage() {
           : JSON.stringify(toolResponse.error);
       }
 
+      const extractCurrentAgent = (): string | null => {
+        if (!runtimePrompt) return null;
+        const promptArray = Array.isArray(runtimePrompt) ? runtimePrompt : [runtimePrompt];
+        for (const item of promptArray) {
+          if (item?.tool_calls?.[0]?.function?.name) {
+            return item.tool_calls[0].function.name;
+          }
+        }
+        return null;
+      };
+
       const extractAssistantText = (): string => {
-        if (runtimePrompt?.response) {
-          return String(runtimePrompt.response);
+        if (runtimePrompt) {
+          const promptArray = Array.isArray(runtimePrompt) ? runtimePrompt : [runtimePrompt];
+          for (const item of promptArray) {
+            if (item?.content && typeof item.content === "string" && item.content.trim()) {
+              return item.content;
+            }
+          }
+          for (const item of promptArray) {
+            if (item?.message?.content && typeof item.message.content === "string") {
+              return item.message.content;
+            }
+          }
         }
-        if (runtimePrompt?.content) {
-          return String(runtimePrompt.content);
-        }
-        if (runtimePrompt?.message) {
-          return String(runtimePrompt.message);
-        }
-        if (intentAnalyzer?.response) {
-          return String(intentAnalyzer.response);
-        }
-        if (intentAnalyzer?.intent) {
-          return `Intent: ${intentAnalyzer.intent}`;
+        if (intentAnalyzer?.MTX_REASONING) {
+          return String(intentAnalyzer.MTX_REASONING);
         }
         if (toolResponse) {
-          const tools = Array.isArray(toolResponse) ? toolResponse : [toolResponse];
-          if (tools.length > 0) {
-            return `Retrieved ${tools.length} result${tools.length > 1 ? "s" : ""} from tool call`;
-          }
+          return "Retrieved data from tool call";
         }
         return "Response processed successfully";
       };
@@ -233,6 +283,8 @@ export default function ChatPage() {
         });
       };
 
+      const newAgent = extractCurrentAgent();
+
       const assistantMessage: ChatMessage = {
         id: crypto.randomUUID(),
         role: "assistant",
@@ -244,7 +296,7 @@ export default function ChatPage() {
         error: errorMessage,
       };
 
-      addMessageToSession(sessionId, assistantMessage);
+      addMessageToSession(sessionId, assistantMessage, newAgent);
       setState((prev) => {
         if (prev.activeSessionId === sessionId) {
           setSelectedMessageId(assistantMessage.id);
@@ -269,7 +321,7 @@ export default function ChatPage() {
   });
 
   const handleSendMessage = (text: string) => {
-    if (!selectedModel) return;
+    if (!selectedModel || !activeSession) return;
 
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
@@ -278,8 +330,19 @@ export default function ChatPage() {
       timestamp: Date.now(),
     };
 
+    const existingMessages = activeSession.messages;
+    const isFirstMessage = existingMessages.length === 0;
+    const conversationWithNewMessage = buildConversationHistory([...existingMessages, userMessage]);
+
     addMessageToSession(activeSessionId, userMessage);
-    sendMessageMutation.mutate({ sessionId: activeSessionId, model: selectedModel, message: text });
+    sendMessageMutation.mutate({ 
+      sessionId: activeSessionId, 
+      model: selectedModel, 
+      message: text,
+      isFirstMessage,
+      currentAgent: activeSession.currentAgent,
+      conversation: conversationWithNewMessage,
+    });
   };
 
   const handleMessageClick = (message: ChatMessage) => {
