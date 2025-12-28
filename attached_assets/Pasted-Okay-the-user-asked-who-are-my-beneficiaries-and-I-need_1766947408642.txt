@@ -1,0 +1,70 @@
+Okay, the user asked, "who are my beneficiaries?" and I need to provide the list. Let me check the tool response. The response has several beneficiaries with details like name, IBAN, bank, etc. The user's previous interaction showed a similar list, but now there are more entries. I should present this information clearly.
+
+First, I'll map each beneficiary to the widget's required structure. The widget needs id, name, nickname, iban, and bank. The BeneficiaryId from the tool can be the id. The BeneficiaryName is the name. The IBAN and BankName are straightforward. The BeneficiaryNickname is the nickname. 
+
+I need to ensure all fields are present. Let me check each entry. For example, the first entry has all required fields. The second one also does. The third and subsequent entries also have all necessary data. 
+
+Now, I'll structure the widget with the list of beneficiaries. The widget's sample data uses a list format, so I'll follow that. Each beneficiary will be an object with the required properties. 
+
+I should make sure there are no missing fields. If any beneficiary is missing a nickname, I might need to handle that, but in this case, all have nicknames. 
+
+Finally, I'll format the JSON correctly, ensuring proper commas and brackets. Let me double-check the syntax to avoid errors. Once that's done, the widget should display the list as intended.
+</think>
+
+json
+{
+  "type": "list_bank_beneficiaries_widget",
+  "props": {
+    "beneficiaries": [
+      {
+        "id": "BEN0001",
+        "name": "Alice Johnson",
+        "nickname": "Alice (Family)",
+        "iban": "US11112222333344445555",
+        "bank": "Bank of America"
+      },
+      {
+        "id": "BEN0002",
+        "name": "Mark Thompson",
+        "nickname": "Mark",
+        "iban": "US66667777888899990000",
+        "bank": "Chase Bank"
+      },
+      {
+        "id": "BEN0003",
+        "name": "Sarah Miller",
+        "nickname": "Sarah (Family)",
+        "iban": "US99998888777766665555",
+        "bank": "Wells Fargo"
+      },
+      {
+        "id": "BEN0008",
+        "name": "Mark Rufallo",
+        "nickname": "Ruff",
+        "iban": "ABCDEF1234123",
+        "bank": "NBD"
+      },
+      {
+        "id": "BEN0009",
+        "name": "Vikhyat Rawla",
+        "nickname": "Vik",
+        "iban": "AE00001",
+        "bank": "ADCB"
+      },
+      {
+        "id": "BEN0010",
+        "name": "Deepali Sharma",
+        "nickname": "Deepali (Company)",
+        "iban": "AE1234567890",
+        "bank": "National Bank of Oman"
+      },
+      {
+        "id": "BEN0011",
+        "name": "Emma Wilson",
+        "nickname": "Emma (Friend)",
+        "iban": "AU88776655443322110099",
+        "bank": "Commonwealth Bank"
+      }
+    ]
+  }
+}

@@ -77,6 +77,9 @@ function detectResponseType(obj: Record<string, unknown>): string {
   if ('CustomerId' in obj && 'FirstName' in obj && 'LastName' in obj) {
     return 'CustomerResponse';
   }
+  if ('BeneficiaryId' in obj && 'BeneficiaryName' in obj) {
+    return 'Beneficiary';
+  }
   if ('BillId' in obj && 'Amount' in obj && 'DueDate' in obj) {
     return 'Bill';
   }
@@ -91,6 +94,9 @@ function detectResponseType(obj: Record<string, unknown>): string {
   }
   if ('RequestId' in obj && 'Status' in obj) {
     return 'WorkflowResponse';
+  }
+  if ('type' in obj && 'props' in obj && typeof obj.props === 'object') {
+    return 'WidgetResponse';
   }
   return 'Generic';
 }
@@ -252,6 +258,91 @@ function renderExchangeRate(obj: Record<string, unknown>, index: number) {
   );
 }
 
+function renderBeneficiary(obj: Record<string, unknown>, index: number) {
+  return (
+    <div key={index} className="bg-card border border-card-border rounded-md p-3">
+      <div className="flex items-center gap-3">
+        <div className="p-2 rounded-full bg-purple-100 dark:bg-purple-900/30">
+          <User className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-medium truncate">{obj.BeneficiaryName as string}</p>
+          {typeof obj.BeneficiaryNickname === 'string' && (
+            <p className="text-sm text-muted-foreground">{obj.BeneficiaryNickname}</p>
+          )}
+          <div className="flex items-center gap-2 flex-wrap mt-1">
+            <Badge variant="outline" className="text-xs">{obj.BankName as string}</Badge>
+            <span className="text-xs text-muted-foreground">{obj.Country as string}</span>
+          </div>
+          <p className="text-xs text-muted-foreground font-mono mt-1 truncate">IBAN: {obj.IBAN as string}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function renderWidgetResponse(obj: Record<string, unknown>, index: number) {
+  const widgetType = obj.type as string;
+  const props = obj.props as Record<string, unknown>;
+  
+  const arrayKeys = Object.keys(props).filter(k => Array.isArray(props[k]));
+  
+  if (arrayKeys.length === 0) {
+    return renderGenericObject(obj, index);
+  }
+  
+  const mainArrayKey = arrayKeys[0];
+  const items = props[mainArrayKey] as unknown[];
+  
+  const widgetLabel = widgetType
+    .replace(/_widget$/i, '')
+    .replace(/_/g, ' ')
+    .replace(/list\s+/i, '')
+    .split(' ')
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+  
+  return (
+    <div key={index} className="space-y-3">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <Badge variant="secondary" className="text-xs">
+          {items.length} {widgetLabel}
+        </Badge>
+      </div>
+      <div className="space-y-2">
+        {items.map((item, itemIndex) => {
+          if (typeof item === 'object' && item !== null) {
+            const itemObj = item as Record<string, unknown>;
+            return renderSmartItem(itemObj, itemIndex);
+          }
+          return null;
+        })}
+      </div>
+    </div>
+  );
+}
+
+function renderSmartItem(obj: Record<string, unknown>, index: number) {
+  const type = detectResponseType(obj);
+  
+  switch (type) {
+    case 'Transaction':
+      return renderTransaction(obj, index);
+    case 'Beneficiary':
+      return renderBeneficiary(obj, index);
+    case 'CustomerResponse':
+      return renderCustomer(obj, index);
+    case 'Bill':
+      return renderBill(obj, index);
+    case 'ExchangeRate':
+      return renderExchangeRate(obj, index);
+    case 'BalanceResponse':
+      return renderBalance(obj, index);
+    default:
+      return renderGenericObject(obj, index);
+  }
+}
+
 function renderGenericObject(obj: Record<string, unknown>, index: number) {
   const importantKeys = ['AccountId', 'CustomerId', 'TransactionId', 'Amount', 'Balance', 'Status', 'Name', 'Email', 'message'];
   const sortedEntries = Object.entries(obj).sort(([a], [b]) => {
@@ -326,10 +417,14 @@ function renderToolResponse(obj: Record<string, unknown>, index: number) {
       return renderBalance(obj, index);
     case 'CustomerResponse':
       return renderCustomer(obj, index);
+    case 'Beneficiary':
+      return renderBeneficiary(obj, index);
     case 'Bill':
       return renderBill(obj, index);
     case 'ExchangeRate':
       return renderExchangeRate(obj, index);
+    case 'WidgetResponse':
+      return renderWidgetResponse(obj, index);
     default:
       return renderGenericObject(obj, index);
   }
