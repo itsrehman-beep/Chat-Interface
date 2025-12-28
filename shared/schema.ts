@@ -36,3 +36,14 @@ export const webhookResponseSchema = z.array(z.object({
 }));
 
 export type WebhookResponse = z.infer<typeof webhookResponseSchema>;
+
+export const chatSessionSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  modelId: z.string().nullable(),
+  messages: z.array(chatMessageSchema),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+});
+
+export type ChatSession = z.infer<typeof chatSessionSchema>;
