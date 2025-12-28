@@ -42,14 +42,17 @@ export async function registerRoutes(
           model,
         };
       } else {
-        if (!current_agent || !conversation) {
+        if (!conversation) {
           return res.status(400).json({
-            error: "Follow-up messages require current_agent and conversation",
+            error: "Follow-up messages require conversation history",
           });
+        }
+        if (!current_agent) {
+          console.warn("Follow-up message sent without current_agent, using 'DefaultAgent'");
         }
         webhookPayload = {
           first_message: null,
-          current_agent,
+          current_agent: current_agent || "DefaultAgent",
           session_id,
           model,
           conversation,

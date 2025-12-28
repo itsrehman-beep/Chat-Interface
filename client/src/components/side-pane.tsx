@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, ChevronRight, X, Zap, Brain, Coins, Clock } from "lucide-react";
+import { ChevronDown, ChevronRight, X, Zap, Brain, Coins, Clock, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 interface SidePaneProps {
   intentAnalyzer: Record<string, unknown> | null;
-  runtimePrompt: Record<string, unknown> | null;
+  runtimePrompt: unknown[] | Record<string, unknown> | null;
   onClose: () => void;
   isOpen: boolean;
 }
@@ -15,7 +15,7 @@ interface SidePaneProps {
 interface CollapsibleSectionProps {
   title: string;
   icon: React.ReactNode;
-  data: Record<string, unknown> | null;
+  children: React.ReactNode;
   defaultOpen?: boolean;
 }
 
@@ -79,16 +79,8 @@ function renderValue(value: unknown, depth = 0): React.ReactNode {
   return <span className="text-foreground">{String(value)}</span>;
 }
 
-function CollapsibleSection({ title, icon, data, defaultOpen = true }: CollapsibleSectionProps) {
+function CollapsibleSection({ title, icon, children, defaultOpen = false }: CollapsibleSectionProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
-
-  if (!data) return null;
-
-  const usage = data.usage as Record<string, unknown> | undefined;
-  const reasoningDetails = data.reasoning_details as unknown;
-  const otherFields = Object.entries(data).filter(
-    ([key]) => key !== "usage" && key !== "reasoning_details"
-  );
 
   return (
     <div className="border border-border rounded-lg overflow-hidden">
@@ -107,50 +99,8 @@ function CollapsibleSection({ title, icon, data, defaultOpen = true }: Collapsib
       </button>
 
       {isOpen && (
-        <div className="p-4 space-y-4 bg-card/50">
-          {otherFields.map(([key, value]) => (
-            <div key={key} className="space-y-1">
-              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                {key.replace(/_/g, " ")}
-              </label>
-              <div className="font-mono text-sm">{renderValue(value)}</div>
-            </div>
-          ))}
-
-          {reasoningDetails !== undefined && reasoningDetails !== null ? (
-            <ReasoningDetailsSection data={reasoningDetails} />
-          ) : null}
-
-          {usage && (
-            <UsageSection usage={usage} />
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function ReasoningDetailsSection({ data }: { data: unknown }) {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <div className="border border-border rounded-md overflow-hidden">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center gap-2 p-2 bg-muted/20 text-left hover-elevate"
-        data-testid="button-expand-reasoning-details"
-      >
-        {isOpen ? (
-          <ChevronDown className="h-3 w-3 text-muted-foreground" />
-        ) : (
-          <ChevronRight className="h-3 w-3 text-muted-foreground" />
-        )}
-        <Brain className="h-3 w-3 text-secondary" />
-        <span className="text-xs font-medium">Reasoning Details</span>
-      </button>
-      {isOpen && (
-        <div className="p-3 bg-muted/10 font-mono text-xs">
-          {renderValue(data)}
+        <div className="p-4 bg-card/50">
+          {children}
         </div>
       )}
     </div>
@@ -209,6 +159,210 @@ function UsageSection({ usage }: { usage: Record<string, unknown> }) {
   );
 }
 
+function IntentAnalyzerSection({ data }: { data: Record<string, unknown> }) {
+  const reasoning = data.MTX_REASONING as string | undefined;
+  const selectedAgent = data.MTX_SELECTED_AGENT as string | undefined;
+  const userQuery = data.MTX_USER_QUERY as string | undefined;
+  const llm = data.MTX_LLM as string | undefined;
+  const inputTokens = data.MTX_INPUT_TOKENS as number | undefined;
+  const outputTokens = data.MTX_OUTPUT_TOKENS as number | undefined;
+  const processedDate = data.MTX_PROCESSED_DATE as string | undefined;
+  const sessionId = data.MTX_SESSION_ID as string | undefined;
+
+  return (
+    <div className="space-y-4">
+      {selectedAgent && (
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="text-xs">
+            <Wrench className="h-3 w-3 mr-1" />
+            {selectedAgent}
+          </Badge>
+        </div>
+      )}
+
+      {reasoning && (
+        <div className="space-y-2">
+          <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            Reasoning
+          </label>
+          <div className="bg-muted/30 rounded-md p-3 text-sm whitespace-pre-wrap">
+            {reasoning}
+          </div>
+        </div>
+      )}
+
+      <CollapsibleSection
+        title="Details"
+        icon={<Zap className="h-4 w-4 text-primary" />}
+        defaultOpen={false}
+      >
+        <div className="space-y-3">
+          {userQuery && (
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                User Query
+              </label>
+              <div className="font-mono text-sm">{userQuery}</div>
+            </div>
+          )}
+          {llm && (
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                LLM
+              </label>
+              <div className="font-mono text-sm">{llm}</div>
+            </div>
+          )}
+          {sessionId && (
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Session ID
+              </label>
+              <div className="font-mono text-sm text-muted-foreground">{sessionId}</div>
+            </div>
+          )}
+          {processedDate && (
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Processed Date
+              </label>
+              <div className="font-mono text-sm">{processedDate}</div>
+            </div>
+          )}
+          {(inputTokens !== undefined || outputTokens !== undefined) && (
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              {inputTokens !== undefined && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Input Tokens:</span>
+                  <span className="font-mono">{inputTokens.toLocaleString()}</span>
+                </div>
+              )}
+              {outputTokens !== undefined && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Output Tokens:</span>
+                  <span className="font-mono">{outputTokens.toLocaleString()}</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </CollapsibleSection>
+    </div>
+  );
+}
+
+function RuntimePromptSection({ data }: { data: unknown[] | Record<string, unknown> }) {
+  const promptArray = Array.isArray(data) ? data : [data];
+  
+  const allReasonings: string[] = [];
+  const allToolCalls: { name: string; arguments: string }[] = [];
+  const allUsages: Record<string, unknown>[] = [];
+  let finalContent = "";
+
+  for (const item of promptArray) {
+    if (!item || typeof item !== "object") continue;
+    const itemObj = item as Record<string, unknown>;
+    
+    if (itemObj.reasoning && typeof itemObj.reasoning === "string") {
+      allReasonings.push(itemObj.reasoning);
+    }
+    
+    if (itemObj.content && typeof itemObj.content === "string" && itemObj.content.trim()) {
+      finalContent = itemObj.content;
+    }
+    
+    const toolCalls = itemObj.tool_calls as Array<{ function?: { name?: string; arguments?: string } }> | undefined;
+    if (toolCalls && Array.isArray(toolCalls)) {
+      for (const tc of toolCalls) {
+        if (tc.function?.name) {
+          allToolCalls.push({
+            name: tc.function.name,
+            arguments: tc.function.arguments || "{}",
+          });
+        }
+      }
+    }
+    
+    if (itemObj.usage && typeof itemObj.usage === "object") {
+      allUsages.push(itemObj.usage as Record<string, unknown>);
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      {allReasonings.length > 0 && (
+        <div className="space-y-2">
+          <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+            <Brain className="h-3 w-3 text-secondary" />
+            Reasoning
+          </label>
+          <div className="space-y-2">
+            {allReasonings.map((reasoning, idx) => (
+              <div key={idx} className="bg-secondary/10 border border-secondary/20 rounded-md p-3 text-sm whitespace-pre-wrap">
+                {reasoning}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {allToolCalls.length > 0 && (
+        <CollapsibleSection
+          title={`Tool Calls (${allToolCalls.length})`}
+          icon={<Wrench className="h-4 w-4 text-accent" />}
+          defaultOpen={false}
+        >
+          <div className="space-y-3">
+            {allToolCalls.map((tc, idx) => (
+              <div key={idx} className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-xs font-mono">
+                    {tc.name}
+                  </Badge>
+                </div>
+                <pre className="bg-muted/30 rounded p-2 text-xs overflow-x-auto">
+                  {tc.arguments}
+                </pre>
+              </div>
+            ))}
+          </div>
+        </CollapsibleSection>
+      )}
+
+      {finalContent && (
+        <CollapsibleSection
+          title="Final Response"
+          icon={<Brain className="h-4 w-4 text-secondary" />}
+          defaultOpen={false}
+        >
+          <div className="bg-muted/30 rounded-md p-3 text-sm whitespace-pre-wrap font-mono">
+            {finalContent}
+          </div>
+        </CollapsibleSection>
+      )}
+
+      {allUsages.length > 0 && (
+        <CollapsibleSection
+          title="Usage Statistics"
+          icon={<Coins className="h-4 w-4 text-muted-foreground" />}
+          defaultOpen={false}
+        >
+          <div className="space-y-3">
+            {allUsages.map((usage, idx) => (
+              <div key={idx}>
+                {allUsages.length > 1 && (
+                  <div className="text-xs text-muted-foreground mb-2">Step {idx + 1}</div>
+                )}
+                <UsageSection usage={usage} />
+              </div>
+            ))}
+          </div>
+        </CollapsibleSection>
+      )}
+    </div>
+  );
+}
+
 export function SidePane({ intentAnalyzer, runtimePrompt, onClose, isOpen }: SidePaneProps) {
   if (!isOpen) return null;
 
@@ -230,7 +384,7 @@ export function SidePane({ intentAnalyzer, runtimePrompt, onClose, isOpen }: Sid
       </div>
 
       <ScrollArea className="flex-1">
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-6">
           {!hasData ? (
             <div className="text-center py-12 text-muted-foreground">
               <Brain className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -238,18 +392,25 @@ export function SidePane({ intentAnalyzer, runtimePrompt, onClose, isOpen }: Sid
             </div>
           ) : (
             <>
-              <CollapsibleSection
-                title="Intent Analyzer Response"
-                icon={<Zap className="h-4 w-4 text-primary" />}
-                data={intentAnalyzer}
-                defaultOpen={true}
-              />
-              <CollapsibleSection
-                title="Runtime Prompt Response"
-                icon={<Brain className="h-4 w-4 text-secondary" />}
-                data={runtimePrompt}
-                defaultOpen={true}
-              />
+              {intentAnalyzer && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Zap className="h-4 w-4 text-primary" />
+                    Intent Analyzer
+                  </div>
+                  <IntentAnalyzerSection data={intentAnalyzer} />
+                </div>
+              )}
+              
+              {runtimePrompt && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Brain className="h-4 w-4 text-secondary" />
+                    Runtime Prompt
+                  </div>
+                  <RuntimePromptSection data={runtimePrompt} />
+                </div>
+              )}
             </>
           )}
         </div>

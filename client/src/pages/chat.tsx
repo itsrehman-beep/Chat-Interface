@@ -167,7 +167,7 @@ export default function ChatPage() {
               ...s,
               messages: [...s.messages, message],
               title: generateSessionTitle([...s.messages, message]) || s.title,
-              currentAgent: newAgent !== undefined ? newAgent : s.currentAgent,
+              currentAgent: newAgent || s.currentAgent,
               updatedAt: Date.now(),
             }
           : s
@@ -227,9 +227,9 @@ export default function ChatPage() {
       
       const responseItem = Array.isArray(data) ? data[0] : data;
       
-      const toolResponse = responseItem?.Tool_Request_Response;
+      const toolResponse = responseItem?.Tool_Request_Response || responseItem?.Tool_Call_Response;
       const intentAnalyzer = responseItem?.Intent_Analyzer_Response;
-      const runtimePrompt = responseItem?.RunTime_Prompt_Response;
+      const runtimePrompt = responseItem?.RunTime_Prompt_Response || responseItem?.Runtime_Prompt_Response;
       
       let errorMessage: string | undefined;
       if (toolResponse?.error) {
@@ -239,6 +239,9 @@ export default function ChatPage() {
       }
 
       const extractCurrentAgent = (): string | null => {
+        if (intentAnalyzer?.MTX_SELECTED_AGENT) {
+          return String(intentAnalyzer.MTX_SELECTED_AGENT);
+        }
         if (!runtimePrompt) return null;
         const promptArray = Array.isArray(runtimePrompt) ? runtimePrompt : [runtimePrompt];
         for (const item of promptArray) {
