@@ -59,6 +59,8 @@ export async function registerRoutes(
         };
       }
 
+      console.log("Sending webhook request:", JSON.stringify(webhookPayload, null, 2));
+      
       const response = await fetch(WEBHOOK_URL, {
         method: "POST",
         headers: {
@@ -67,16 +69,36 @@ export async function registerRoutes(
         body: JSON.stringify(webhookPayload),
       });
 
+      const responseText = await response.text();
+      console.log("Webhook response status:", response.status);
+      console.log("Webhook response body:", responseText.substring(0, 500));
+
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Webhook error:", errorText);
+        console.error("Webhook error:", responseText);
         return res.status(response.status).json({
           error: "Webhook request failed",
-          details: errorText,
+          details: responseText,
         });
       }
 
-      const data = await response.json();
+      if (!responseText || responseText.trim() === "") {
+        console.error("Webhook returned empty response");
+        return res.status(502).json({
+          error: "Webhook returned empty response",
+        });
+      }
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error("Failed to parse webhook response:", parseError);
+        return res.status(502).json({
+          error: "Webhook returned invalid JSON",
+          details: responseText.substring(0, 200),
+        });
+      }
+      
       res.json(data);
     } catch (error) {
       console.error("Error calling webhook:", error);
