@@ -5,13 +5,12 @@ import { ModelSelector } from "@/components/model-selector";
 import { ChatMessageComponent } from "@/components/chat-message";
 import { MessageInput } from "@/components/message-input";
 import { SidePane } from "@/components/side-pane";
-import { LoadingOverlay } from "@/components/loading-overlay";
 import { ErrorBanner } from "@/components/error-banner";
 import { EmptyState } from "@/components/empty-state";
 import { ThemeToggle } from "@/components/theme-toggle";
 import type { ChatMessage } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
-import { Brain } from "lucide-react";
+import { Brain, Bot } from "lucide-react";
 
 export default function ChatPage() {
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
@@ -155,10 +154,6 @@ export default function ChatPage() {
         <ErrorBanner message={globalError} onDismiss={() => setGlobalError(null)} />
       )}
 
-      <LoadingOverlay 
-        isVisible={sendMessageMutation.isPending} 
-        message="Processing your message..." 
-      />
 
       <header className="shrink-0 border-b border-border bg-card px-4 py-3">
         <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -197,6 +192,20 @@ export default function ChatPage() {
                     onClick={() => handleMessageClick(message)}
                   />
                 ))}
+                {sendMessageMutation.isPending && (
+                  <div className="flex gap-3 p-4" data-testid="loading-bubble">
+                    <div className="h-8 w-8 shrink-0 rounded-full bg-secondary flex items-center justify-center">
+                      <Bot className="h-4 w-4 text-secondary-foreground" />
+                    </div>
+                    <div className="bg-card border border-card-border rounded-lg px-4 py-3">
+                      <div className="flex gap-1">
+                        <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                        <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                        <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <div ref={messagesEndRef} />
               </div>
             </ScrollArea>
