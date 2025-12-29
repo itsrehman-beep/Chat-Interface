@@ -1,12 +1,54 @@
-import { User, Bot, AlertCircle, Image as ImageIcon } from "lucide-react";
+import { User, Bot, AlertCircle, Image as ImageIcon, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ChatMessage as ChatMessageType } from "@shared/schema";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 interface ChatMessageProps {
   message: ChatMessageType;
   isSelected: boolean;
   onClick: () => void;
+}
+
+interface PaginatedResponse {
+  items: Record<string, unknown>[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    total_pages: number;
+  };
+}
+
+function isPaginatedResponse(obj: unknown): obj is { items: unknown[]; total: number; page: number; limit: number; total_pages: number } {
+  if (!obj || typeof obj !== "object") return false;
+  const o = obj as Record<string, unknown>;
+  return (
+    Array.isArray(o.items) &&
+    typeof o.total === "number" &&
+    typeof o.page === "number" &&
+    typeof o.limit === "number" &&
+    typeof o.total_pages === "number"
+  );
+}
+
+function normalizePaginatedResponse(obj: Record<string, unknown>): PaginatedResponse | null {
+  if (!isPaginatedResponse(obj)) return null;
+  
+  const items = obj.items.filter(
+    (item): item is Record<string, unknown> => 
+      typeof item === "object" && item !== null
+  );
+  
+  return {
+    items,
+    pagination: {
+      total: obj.total,
+      page: obj.page,
+      limit: obj.limit,
+      total_pages: obj.total_pages,
+    },
+  };
 }
 
 function isImageUrl(value: unknown): boolean {
@@ -22,44 +64,75 @@ function isImageUrl(value: unknown): boolean {
   );
 }
 
+function renderKeyValue(key: string, value: unknown) {
+  const valueStr = typeof value === "object" ? JSON.stringify(value) : String(value);
+  const isImage = isImageUrl(key) || (typeof value === "string" && isImageUrl(value));
+  
+  return (
+    <div key={key} className="flex items-start gap-2 break-all">
+      <span className="text-muted-foreground shrink-0">{key}:</span>
+      {isImage && typeof value === "string" ? (
+        <div className="flex items-center gap-2">
+          <Avatar className="h-6 w-6 shrink-0">
+            <img 
+              src={value} 
+              alt={key}
+              className="object-cover"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = "none";
+              }}
+            />
+            <AvatarFallback>
+              <ImageIcon className="h-3 w-3" />
+            </AvatarFallback>
+          </Avatar>
+          <span className="text-foreground truncate max-w-[200px]" title={valueStr}>
+            {valueStr}
+          </span>
+        </div>
+      ) : (
+        <span className="text-foreground">{valueStr}</span>
+      )}
+    </div>
+  );
+}
+
 function renderToolObject(obj: Record<string, unknown>, index: number) {
   return (
     <div 
       key={index} 
       className="bg-muted/50 rounded-md p-3 space-y-1 font-mono text-sm"
     >
-      {Object.entries(obj).map(([key, value]) => {
-        const valueStr = typeof value === "object" ? JSON.stringify(value) : String(value);
-        const isImage = isImageUrl(key) || (typeof value === "string" && isImageUrl(value));
-        
-        return (
-          <div key={key} className="flex items-start gap-2 break-all">
-            <span className="text-muted-foreground shrink-0">{key}:</span>
-            {isImage && typeof value === "string" ? (
-              <div className="flex items-center gap-2">
-                <Avatar className="h-6 w-6 shrink-0">
-                  <img 
-                    src={value} 
-                    alt={key}
-                    className="object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = "none";
-                    }}
-                  />
-                  <AvatarFallback>
-                    <ImageIcon className="h-3 w-3" />
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-foreground truncate max-w-[200px]" title={valueStr}>
-                  {valueStr}
-                </span>
-              </div>
-            ) : (
-              <span className="text-foreground">{valueStr}</span>
-            )}
+      {Object.entries(obj).map(([key, value]) => renderKeyValue(key, value))}
+    </div>
+  );
+}
+
+function renderPaginatedResponse(paginated: PaginatedResponse, index: number) {
+  const { items, pagination } = paginated;
+  
+  return (
+    <div key={index} className="space-y-2">
+      <div className="flex items-center justify-between gap-2 px-1">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <ChevronRight className="h-3 w-3" />
+          <span>{pagination.total} results</span>
+        </div>
+        <Badge variant="secondary" className="text-xs">
+          Page {pagination.page} of {pagination.total_pages}
+        </Badge>
+      </div>
+      
+      <div className="space-y-2">
+        {items.map((item, itemIndex) => (
+          <div 
+            key={itemIndex}
+            className="bg-muted/50 rounded-md p-3 space-y-1 font-mono text-sm border-l-2 border-secondary/50"
+          >
+            {Object.entries(item).map(([key, value]) => renderKeyValue(key, value))}
           </div>
-        );
-      })}
+        ))}
+      </div>
     </div>
   );
 }
@@ -113,7 +186,12 @@ export function ChatMessageComponent({ message, isSelected, onClick }: ChatMessa
           <div className="w-full space-y-2">
             {message.toolResponse.map((tool: unknown, index: number) => {
               if (typeof tool === "object" && tool !== null) {
-                return renderToolObject(tool as Record<string, unknown>, index);
+                const toolObj = tool as Record<string, unknown>;
+                const paginated = normalizePaginatedResponse(toolObj);
+                if (paginated) {
+                  return renderPaginatedResponse(paginated, index);
+                }
+                return renderToolObject(toolObj, index);
               }
               return null;
             })}
