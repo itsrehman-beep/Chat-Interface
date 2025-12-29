@@ -427,7 +427,7 @@ export default function ChatPage() {
               <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
                 <Brain className="h-5 w-5 text-primary-foreground" />
               </div>
-              <h1 className="font-semibold text-lg hidden sm:block">Cerebras Chat</h1>
+              <h1 className="font-semibold text-lg hidden sm:block">Eval Harness</h1>
             </div>
             
             <div className="flex items-center gap-4">

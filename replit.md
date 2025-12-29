@@ -1,4 +1,4 @@
-# Cerebras Chat Interface
+# Eval Harness
 
 ## Overview
 A React-based chat interface for interacting with Cerebras/OpenRouter AI models via an n8n webhook. Users can select a model, send messages, and inspect detailed responses including intent analysis and runtime prompts.
