@@ -1,0 +1,197 @@
+[
+  {
+    "RunTime_Prompt_Response": [
+      {
+        "role": "assistant",
+        "content": "<think>\nOkay, the user wants to see their last transaction with the default account. Let me start by getting the default account details. I'll call the GetDefaultAccount function. Once I have the default account's AccountId, I can use it to fetch the transactions. Next, I need to use the GetAccountTransactionsByAccountId function with the AccountId from the default account. I should retrieve the most recent transactions, maybe the last five. Then, I'll format the transactions into the ListTransactionsWidget, making sure to include the date, merchant, amount, and whether it's a debit or credit. If there are no transactions, I'll inform the user. After that, I'll ask if they want to see another account's transactions. If they do, I'll get all accounts with GetAccounts, list them, and then fetch the selected account's transactions. I need to handle any errors, like if the default account isn't found or if there's an invalid account ID. Keep the responses friendly and conversational.\n</think>",
+        "refusal": null,
+        "reasoning": null,
+        "tool_calls": [
+          {
+            "id": "0cf85b4d7",
+            "type": "function",
+            "function": {
+              "name": "GetDefaultAccount",
+              "arguments": "{}"
+            },
+            "index": 0
+          }
+        ],
+        "finish_reason": "tool_calls",
+        "usage": {
+          "prompt_tokens": 8915,
+          "completion_tokens": 227,
+          "total_tokens": 9142,
+          "cost": 0.0037476,
+          "is_byok": false,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "audio_tokens": 0,
+            "video_tokens": 0
+          },
+          "cost_details": {
+            "upstream_inference_cost": null,
+            "upstream_inference_prompt_cost": 0.003566,
+            "upstream_inference_completions_cost": 0.0001816
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0,
+            "image_tokens": 0
+          }
+        }
+      },
+      {
+        "role": "assistant",
+        "content": "<think>\nOkay, the user wants to see their last transactions with the default account. I've already retrieved the default account details, which is AccountId A0002. Now I need to get the transactions for this account. Let me call the GetAccountTransactionsByAccountId function with AccountId A0002. I'll set the page to 1 and limit to 5 to get the most recent transactions. Once I have the data, I'll format it into the ListTransactionsWidget. If there are no transactions, I'll let the user know. Then, I'll ask if they want to view another account's transactions. If they do, I'll need to list all accounts using GetAccounts and proceed from there. Let's make sure the response is clear and user-friendly.\n</think>",
+        "refusal": null,
+        "reasoning": null,
+        "tool_calls": [
+          {
+            "id": "3bc767a0e",
+            "type": "function",
+            "function": {
+              "name": "GetAccountTransactionsByAccountId",
+              "arguments": "{\"account_id\": \"A0002\", \"page\": 1, \"limit\": 5}"
+            },
+            "index": 0
+          }
+        ],
+        "finish_reason": "tool_calls",
+        "usage": {
+          "prompt_tokens": 9813,
+          "completion_tokens": 203,
+          "total_tokens": 10016,
+          "cost": 0.0040876,
+          "is_byok": false,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "audio_tokens": 0,
+            "video_tokens": 0
+          },
+          "cost_details": {
+            "upstream_inference_cost": null,
+            "upstream_inference_prompt_cost": 0.0039252,
+            "upstream_inference_completions_cost": 0.0001624
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0,
+            "image_tokens": 0
+          }
+        }
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "refusal": null,
+        "reasoning": "Okay, the user asked for their last transactions with the default account. I first needed to get the default account, which I did, and it's A0002. Then I called the GetAccountTransactionsByAccountId function with that account ID, page 1, and limit 5. The response came back with five transactions. Now I need to present these in a user-friendly way.\n\nLooking at the transactions, each has details like date, amount, type, and description. The widget requires merchant, date, amount, and isDebit. I'll map the description to merchant, format the date, and check if the type is Debit or Credit to determine the color. The amounts are already there, but I need to make sure they're displayed correctly with the currency symbol. \n\nWait, the first transaction is a Credit, so the amount is positive. The others are Debits, so negative. In the widget, Debits are blue, Credits are purple. I should also check if there are more pages. The total is 138, so page 1 of 28. Maybe mention there are more transactions available if they want to see more. \n\nAfter displaying the transactions, I should ask if they want to view another account. The user might have other accounts, so I need to prompt them. If they do, I'll have to get all accounts using GetAccounts and let them select one. But for now, just present the default account's transactions clearly.\n</think>\n\nHere are the recent transactions for your default account (A0002):\n\n**Recent Transactions**\n- **Sep 6, 2025**  \n  Initial deposit  \n  +$2,000.00 (Credit)\n\n- **Oct 3, 2025**  \n  Online purchase at Amazon  \n  -$45.99 (Debit)\n\n- **Oct 8, 2025**  \n  birthday gift to Alice Johnson  \n  -$100.00 (Debit)\n\n- **Oct 9, 2025**  \n  Testing internal transfer detection  \n  -$100.00 (Debit)\n\n- **Oct 9, 2025**  \n  External transfer test  \n  -$25.00 (Debit)\n\nWould you like to view transactions for another account?",
+        "reasoning_details": [
+          {
+            "format": null,
+            "index": 0,
+            "type": "reasoning.text",
+            "text": "Okay, the user asked for their last transactions with the default account. I first needed to get the default account, which I did, and it's A0002. Then I called the GetAccountTransactionsByAccountId function with that account ID, page 1, and limit 5. The response came back with five transactions. Now I need to present these in a user-friendly way.\n\nLooking at the transactions, each has details like date, amount, type, and description. The widget requires merchant, date, amount, and isDebit. I'll map the description to merchant, format the date, and check if the type is Debit or Credit to determine the color. The amounts are already there, but I need to make sure they're displayed correctly with the currency symbol. \n\nWait, the first transaction is a Credit, so the amount is positive. The others are Debits, so negative. In the widget, Debits are blue, Credits are purple. I should also check if there are more pages. The total is 138, so page 1 of 28. Maybe mention there are more transactions available if they want to see more. \n\nAfter displaying the transactions, I should ask if they want to view another account. The user might have other accounts, so I need to prompt them. If they do, I'll have to get all accounts using GetAccounts and let them select one. But for now, just present the default account's transactions clearly.\n</think>\n\nHere are the recent transactions for your default account (A0002):\n\n**Recent Transactions**\n- **Sep 6, 2025**  \n  Initial deposit  \n  +$2,000.00 (Credit)\n\n- **Oct 3, 2025**  \n  Online purchase at Amazon  \n  -$45.99 (Debit)\n\n- **Oct 8, 2025**  \n  birthday gift to Alice Johnson  \n  -$100.00 (Debit)\n\n- **Oct 9, 2025**  \n  Testing internal transfer detection  \n  -$100.00 (Debit)\n\n- **Oct 9, 2025**  \n  External transfer test  \n  -$25.00 (Debit)\n\nWould you like to view transactions for another account?"
+          }
+        ],
+        "finish_reason": "stop",
+        "usage": {
+          "prompt_tokens": 10240,
+          "completion_tokens": 491,
+          "total_tokens": 10731,
+          "cost": 0.0044888,
+          "is_byok": false,
+          "prompt_tokens_details": {
+            "cached_tokens": 8160,
+            "audio_tokens": 0,
+            "video_tokens": 0
+          },
+          "cost_details": {
+            "upstream_inference_cost": null,
+            "upstream_inference_prompt_cost": 0.004096,
+            "upstream_inference_completions_cost": 0.0003928
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 489,
+            "image_tokens": 0
+          }
+        }
+      }
+    ],
+    "Tool_Request_Response": [
+      {
+        "items": [
+          {
+            "TransactionId": "T0002",
+            "AccountId": "A0002",
+            "Amount": 2000,
+            "Currency": "USD",
+            "RecipientAmount": -2000,
+            "RecipientCurrency": "USD",
+            "DateTime": "2025-09-06T05:58:32.893159",
+            "Type": "Credit",
+            "Subtype": "Transfer",
+            "Description": "Initial deposit"
+          },
+          {
+            "TransactionId": "T0006",
+            "AccountId": "A0002",
+            "CardId": "CARD0002",
+            "Amount": -45.99,
+            "Currency": "USD",
+            "RecipientAmount": 45.99,
+            "RecipientCurrency": "USD",
+            "DateTime": "2025-10-03T05:58:32.893159",
+            "Type": "Debit",
+            "Subtype": "Purchase",
+            "Description": "Online purchase at Amazon"
+          },
+          {
+            "TransactionId": "T0023",
+            "AccountId": "A0002",
+            "BeneficiaryId": "BEN0001",
+            "BeneficiaryName": "Alice Johnson",
+            "Amount": -100,
+            "Currency": "USD",
+            "RecipientAmount": 100,
+            "RecipientCurrency": "USD",
+            "DateTime": "2025-10-08T07:13:12.284241",
+            "Type": "Debit",
+            "Subtype": "Transfer",
+            "Description": "birthday gift"
+          },
+          {
+            "TransactionId": "T0026",
+            "AccountId": "A0002",
+            "RecipientName": "Test Recipient",
+            "RecipientIBAN": "CN55556666777788889999",
+            "Amount": -100,
+            "Currency": "USD",
+            "RecipientAmount": 100,
+            "RecipientCurrency": "USD",
+            "DateTime": "2025-10-09T07:44:21.881324",
+            "Type": "Debit",
+            "Subtype": "Transfer",
+            "Description": "Testing internal transfer detection"
+          },
+          {
+            "TransactionId": "T0028",
+            "AccountId": "A0002",
+            "RecipientName": "External Bank Account",
+            "RecipientIBAN": "GB99XXXX99999999999999",
+            "Amount": -25,
+            "Currency": "USD",
+            "RecipientAmount": 25,
+            "RecipientCurrency": "USD",
+            "DateTime": "2025-10-09T07:48:56.564402",
+            "Type": "Debit",
+            "Subtype": "Transfer",
+            "Description": "External transfer test"
+          }
+        ],
+        "total": 138,
+        "page": 1,
+        "limit": 5,
+        "total_pages": 28
+      }
+    ]
+  }
+]
