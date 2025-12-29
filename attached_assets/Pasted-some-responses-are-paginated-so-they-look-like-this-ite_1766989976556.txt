@@ -1,0 +1,81 @@
+some responses are paginated so they look like this: 
+
+[
+  {
+    "items": [
+      {
+        "TransactionId": "T0002",
+        "AccountId": "A0002",
+        "Amount": 2000,
+        "Currency": "USD",
+        "RecipientAmount": -2000,
+        "RecipientCurrency": "USD",
+        "DateTime": "2025-09-06T05:58:32.893159",
+        "Type": "Credit",
+        "Subtype": "Transfer",
+        "Description": "Initial deposit"
+      },
+      {
+        "TransactionId": "T0006",
+        "AccountId": "A0002",
+        "CardId": "CARD0002",
+        "Amount": -45.99,
+        "Currency": "USD",
+        "RecipientAmount": 45.99,
+        "RecipientCurrency": "USD",
+        "DateTime": "2025-10-03T05:58:32.893159",
+        "Type": "Debit",
+        "Subtype": "Purchase",
+        "Description": "Online purchase at Amazon"
+      },
+      {
+        "TransactionId": "T0023",
+        "AccountId": "A0002",
+        "BeneficiaryId": "BEN0001",
+        "BeneficiaryName": "Alice Johnson",
+        "Amount": -100,
+        "Currency": "USD",
+        "RecipientAmount": 100,
+        "RecipientCurrency": "USD",
+        "DateTime": "2025-10-08T07:13:12.284241",
+        "Type": "Debit",
+        "Subtype": "Transfer",
+        "Description": "birthday gift"
+      },
+      {
+        "TransactionId": "T0026",
+        "AccountId": "A0002",
+        "RecipientName": "Test Recipient",
+        "RecipientIBAN": "CN55556666777788889999",
+        "Amount": -100,
+        "Currency": "USD",
+        "RecipientAmount": 100,
+        "RecipientCurrency": "USD",
+        "DateTime": "2025-10-09T07:44:21.881324",
+        "Type": "Debit",
+        "Subtype": "Transfer",
+        "Description": "Testing internal transfer detection"
+      },
+      {
+        "TransactionId": "T0028",
+        "AccountId": "A0002",
+        "RecipientName": "External Bank Account",
+        "RecipientIBAN": "GB99XXXX99999999999999",
+        "Amount": -25,
+        "Currency": "USD",
+        "RecipientAmount": 25,
+        "RecipientCurrency": "USD",
+        "DateTime": "2025-10-09T07:48:56.564402",
+        "Type": "Debit",
+        "Subtype": "Transfer",
+        "Description": "External transfer test"
+      }
+    ],
+    "total": 138,
+    "page": 1,
+    "limit": 5,
+    "total_pages": 28
+  }
+]
+
+But please render each object in the items list instead of just keeping it as a list in the chat interface
