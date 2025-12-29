@@ -255,17 +255,54 @@ export default function ChatPage() {
       };
 
       const extractAssistantText = (): string => {
+        const stripThinkTags = (text: string): string => {
+          return text.replace(/<think>[\s\S]*?<\/think>/g, "").replace(/<think>[\s\S]*/g, "").trim();
+        };
+
+        const extractTextFromContent = (content: unknown): string | null => {
+          if (typeof content === "string" && content.trim()) {
+            return content.trim();
+          }
+          if (Array.isArray(content)) {
+            const texts: string[] = [];
+            for (const item of content) {
+              if (typeof item === "string" && item.trim()) {
+                texts.push(item.trim());
+              } else if (item && typeof item === "object") {
+                const itemObj = item as Record<string, unknown>;
+                if (itemObj.text && typeof itemObj.text === "string") {
+                  texts.push(itemObj.text.trim());
+                }
+              }
+            }
+            return texts.length > 0 ? texts.join("\n") : null;
+          }
+          return null;
+        };
+
         if (runtimePrompt) {
           const promptArray = Array.isArray(runtimePrompt) ? runtimePrompt : [runtimePrompt];
           for (const item of promptArray) {
-            if (item?.content && typeof item.content === "string" && item.content.trim()) {
-              return item.content;
+            const contentText = extractTextFromContent(item?.content);
+            if (contentText) {
+              const cleaned = stripThinkTags(contentText);
+              if (cleaned) return cleaned;
             }
           }
           for (const item of promptArray) {
-            if (item?.message?.content && typeof item.message.content === "string") {
-              return item.message.content;
+            const msgContentText = extractTextFromContent(item?.message?.content);
+            if (msgContentText) {
+              const cleaned = stripThinkTags(msgContentText);
+              if (cleaned) return cleaned;
             }
+          }
+          const lastItem = promptArray[promptArray.length - 1];
+          if (lastItem?.reasoning && typeof lastItem.reasoning === "string") {
+            return lastItem.reasoning.slice(0, 200) + (lastItem.reasoning.length > 200 ? "..." : "");
+          }
+          if (lastItem?.reasoning_details?.[0]?.text) {
+            const text = lastItem.reasoning_details[0].text;
+            return text.slice(0, 200) + (text.length > 200 ? "..." : "");
           }
         }
         if (intentAnalyzer?.MTX_REASONING) {

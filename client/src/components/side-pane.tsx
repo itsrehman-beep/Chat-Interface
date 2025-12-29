@@ -251,10 +251,101 @@ function IntentAnalyzerSection({ data }: { data: Record<string, unknown> }) {
   );
 }
 
+function extractThinkContent(content: string): string | null {
+  const thinkMatch = content.match(/<think>([\s\S]*?)<\/think>/);
+  if (thinkMatch) {
+    return thinkMatch[1].trim();
+  }
+  if (content.startsWith("<think>")) {
+    let extracted = content.replace(/^<think>\s*/, "");
+    extracted = extracted.replace(/\s*<\/think>\s*$/, "");
+    return extracted.trim() || null;
+  }
+  return null;
+}
+
+function normalizeReasoning(text: string): string {
+  return text.replace(/\s+/g, " ").trim().slice(0, 500);
+}
+
+function extractTextFromContentField(content: unknown): string | null {
+  if (typeof content === "string" && content.trim()) {
+    return content.trim();
+  }
+  
+  if (Array.isArray(content)) {
+    const texts: string[] = [];
+    for (const item of content) {
+      if (typeof item === "string" && item.trim()) {
+        texts.push(item.trim());
+      } else if (item && typeof item === "object") {
+        const itemObj = item as Record<string, unknown>;
+        if (itemObj.text && typeof itemObj.text === "string" && itemObj.text.trim()) {
+          texts.push(itemObj.text.trim());
+        }
+        if (itemObj.content && typeof itemObj.content === "string" && itemObj.content.trim()) {
+          texts.push(itemObj.content.trim());
+        }
+      }
+    }
+    return texts.length > 0 ? texts.join("\n") : null;
+  }
+  
+  return null;
+}
+
+function extractReasoningsFromStep(itemObj: Record<string, unknown>): string[] {
+  const reasonings: string[] = [];
+  
+  if (itemObj.reasoning && typeof itemObj.reasoning === "string" && itemObj.reasoning.trim()) {
+    reasonings.push(itemObj.reasoning.trim());
+  }
+  
+  const reasoningDetails = itemObj.reasoning_details;
+  if (Array.isArray(reasoningDetails)) {
+    for (const rd of reasoningDetails) {
+      if (rd && typeof rd === "object") {
+        const rdObj = rd as Record<string, unknown>;
+        if (rdObj.text && typeof rdObj.text === "string" && rdObj.text.trim()) {
+          reasonings.push(rdObj.text.trim());
+        }
+        const contentText = extractTextFromContentField(rdObj.content);
+        if (contentText) {
+          reasonings.push(contentText);
+        }
+      }
+    }
+  }
+  
+  if (itemObj.content) {
+    const contentText = extractTextFromContentField(itemObj.content);
+    if (contentText) {
+      const thinkContent = extractThinkContent(contentText);
+      if (thinkContent) {
+        reasonings.push(thinkContent);
+      }
+    }
+  }
+  
+  if (itemObj.message && typeof itemObj.message === "object") {
+    const msgObj = itemObj.message as Record<string, unknown>;
+    const msgContentText = extractTextFromContentField(msgObj.content);
+    if (msgContentText) {
+      const thinkContent = extractThinkContent(msgContentText);
+      if (thinkContent) {
+        reasonings.push(thinkContent);
+      }
+    }
+  }
+  
+  return reasonings;
+}
+
 function RuntimePromptSection({ data }: { data: unknown[] | Record<string, unknown> }) {
   const promptArray = Array.isArray(data) ? data : [data];
   
   const allReasonings: string[] = [];
+  const seenReasoningKeys = new Set<string>();
   const allToolCalls: { name: string; arguments: string }[] = [];
   const allUsages: Record<string, unknown>[] = [];
   let finalContent = "";
@@ -263,12 +354,32 @@ function RuntimePromptSection({ data }: { data: unknown[] | Record<string, unkno
     if (!item || typeof item !== "object") continue;
     const itemObj = item as Record<string, unknown>;
     
-    if (itemObj.reasoning && typeof itemObj.reasoning === "string") {
-      allReasonings.push(itemObj.reasoning);
+    const stepReasonings = extractReasoningsFromStep(itemObj);
+    for (const reasoning of stepReasonings) {
+      const normalizedKey = normalizeReasoning(reasoning);
+      if (!seenReasoningKeys.has(normalizedKey)) {
+        seenReasoningKeys.add(normalizedKey);
+        allReasonings.push(reasoning);
+      }
     }
     
-    if (itemObj.content && typeof itemObj.content === "string" && itemObj.content.trim()) {
-      finalContent = itemObj.content;
+    const contentText = extractTextFromContentField(itemObj.content);
+    if (contentText) {
+      const cleanContent = contentText.replace(/<think>[\s\S]*?<\/think>/g, "").replace(/<think>[\s\S]*/g, "").trim();
+      if (cleanContent) {
+        finalContent = cleanContent;
+      }
+    }
+    
+    if (!finalContent && itemObj.message && typeof itemObj.message === "object") {
+      const msgObj = itemObj.message as Record<string, unknown>;
+      const msgContentText = extractTextFromContentField(msgObj.content);
+      if (msgContentText) {
+        const cleanContent = msgContentText.replace(/<think>[\s\S]*?<\/think>/g, "").replace(/<think>[\s\S]*/g, "").trim();
+        if (cleanContent) {
+          finalContent = cleanContent;
+        }
+      }
     }
     
     const toolCalls = itemObj.tool_calls as Array<{ function?: { name?: string; arguments?: string } }> | undefined;
