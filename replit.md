@@ -46,10 +46,23 @@ A React-based chat interface for interacting with Cerebras/OpenRouter AI models 
 6. z-ai/glm-4.6
 
 ## Webhook Integration
-- **URL**: https://n8n.dev01.modelmatrix.ai/webhook-test/86f31db0-921a-40d5-b6a7-6dc4ec542705
+- **URL**: https://n8n.dev01.modelmatrix.ai/webhook/d87c25a6-5ebe-4dbe-9f94-504eab7aa23b
+- **Session ID**: Hardcoded to `c2c1dafa-273f-4c0f-bf5a-8ef8232a4cb5`
 - **Method**: POST
-- **Body**: `{ model_name: string, first_message: string }`
-- **Response**: Array containing Tool_Call_Response, Intent_Analyzer_Response, Runtime_Prompt_Response
+- **First message body**: `{ first_message: string, session_id: string, model: string }`
+- **Follow-up message body**: `{ first_message: null, current_agent: string, session_id: string, model: string, conversation: array }`
+- **Response**: Array containing Tool_Request_Response, Intent_Analyzer_Response (first message only), RunTime_Prompt_Response
+
+## Response Parsing
+The `RunTime_Prompt_Response` can be an array of multiple steps (multi-step tool chain):
+- Each step may contain: `content`, `reasoning`, `reasoning_details`, `tool_calls`, `usage`
+- Reasoning is extracted from:
+  - `reasoning` field directly
+  - `reasoning_details[].text` or `reasoning_details[].content`
+  - `<think>` tags within `content` field
+  - Content arrays with structured segments `{ text: "..." }`
+- All reasoning steps are displayed prominently in the side pane inspector
+- Tool calls and usage statistics are shown in collapsible sections
 
 ## Design System
 - **Primary**: #6366F1 (Indigo)
