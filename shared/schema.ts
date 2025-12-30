@@ -43,19 +43,13 @@ export const chatSessionSchema = z.object({
   modelId: z.string().nullable(),
   currentAgent: z.string().nullable(),
   messages: z.array(chatMessageSchema),
+  intentSystemPrompt: z.string().optional(),
+  runtimeSystemPrompt: z.string().optional(),
   createdAt: z.number(),
   updatedAt: z.number(),
 });
 
 export type ChatSession = z.infer<typeof chatSessionSchema>;
-
-export const webhookFirstMessageRequestSchema = z.object({
-  first_message: z.string(),
-  session_id: z.string(),
-  model: z.string(),
-});
-
-export type WebhookFirstMessageRequest = z.infer<typeof webhookFirstMessageRequestSchema>;
 
 export const conversationMessageSchema = z.object({
   role: z.enum(["user", "assistant"]),
@@ -64,12 +58,22 @@ export const conversationMessageSchema = z.object({
 
 export type ConversationMessage = z.infer<typeof conversationMessageSchema>;
 
-export const webhookFollowUpRequestSchema = z.object({
+export const webhookRequestSchema2 = z.object({
   first_message: z.null(),
   current_agent: z.string(),
   session_id: z.string(),
   model: z.string(),
-  conversation: z.array(conversationMessageSchema),
+  messages: z.array(conversationMessageSchema),
+  intent_system_prompt: z.string().optional(),
+  runtime_system_prompt: z.string().optional(),
 });
 
-export type WebhookFollowUpRequest = z.infer<typeof webhookFollowUpRequestSchema>;
+export type WebhookRequest2 = z.infer<typeof webhookRequestSchema2>;
+
+export const DEFAULT_INTENT_SYSTEM_PROMPT = `You are an intent analyzer. Analyze the user's message and determine their intent.
+
+[PLACEHOLDER - Replace with actual intent system prompt]`;
+
+export const DEFAULT_RUNTIME_SYSTEM_PROMPT = `You are a helpful assistant that can execute various tasks.
+
+[PLACEHOLDER - Replace with actual runtime system prompt]`;

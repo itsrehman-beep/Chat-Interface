@@ -25,7 +25,7 @@ export async function registerRoutes(
 
   app.post("/api/webhook", async (req, res) => {
     try {
-      const { first_message, session_id, model, current_agent, conversation } = req.body;
+      const { session_id, model, current_agent, messages, intent_system_prompt, runtime_system_prompt } = req.body;
 
       if (!session_id || !model) {
         return res.status(400).json({
@@ -33,30 +33,25 @@ export async function registerRoutes(
         });
       }
 
-      let webhookPayload;
+      if (!messages || !Array.isArray(messages) || messages.length === 0) {
+        return res.status(400).json({
+          error: "Messages array is required",
+        });
+      }
+
+      const webhookPayload: Record<string, unknown> = {
+        first_message: null,
+        current_agent: current_agent || "DefaultAgent",
+        session_id,
+        model,
+        messages,
+      };
       
-      if (first_message !== null && first_message !== undefined) {
-        webhookPayload = {
-          first_message,
-          session_id,
-          model,
-        };
-      } else {
-        if (!conversation) {
-          return res.status(400).json({
-            error: "Follow-up messages require conversation history",
-          });
-        }
-        if (!current_agent) {
-          console.warn("Follow-up message sent without current_agent, using 'DefaultAgent'");
-        }
-        webhookPayload = {
-          first_message: null,
-          current_agent: current_agent || "DefaultAgent",
-          session_id,
-          model,
-          conversation,
-        };
+      if (intent_system_prompt) {
+        webhookPayload.intent_system_prompt = intent_system_prompt;
+      }
+      if (runtime_system_prompt) {
+        webhookPayload.runtime_system_prompt = runtime_system_prompt;
       }
 
       console.log("Sending webhook request:", JSON.stringify(webhookPayload, null, 2));

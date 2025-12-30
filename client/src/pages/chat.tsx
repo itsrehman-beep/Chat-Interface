@@ -10,6 +10,7 @@ import { ErrorBanner } from "@/components/error-banner";
 import { EmptyState } from "@/components/empty-state";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AppSidebar } from "@/components/app-sidebar";
+import { PromptEditor } from "@/components/prompt-editor";
 import type { ChatMessage, ChatSession } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { Brain, Bot } from "lucide-react";
@@ -146,6 +147,15 @@ export default function ChatPage() {
     setSidePaneOpen(false);
   }, []);
 
+  const handleSavePrompts = useCallback((intentPrompt: string | undefined, runtimePrompt: string | undefined) => {
+    updateSession(activeSessionId, (session) => ({
+      ...session,
+      intentSystemPrompt: intentPrompt,
+      runtimeSystemPrompt: runtimePrompt,
+      updatedAt: Date.now(),
+    }));
+  }, [activeSessionId, updateSession]);
+
   const handleSessionSelect = useCallback((sessionId: string) => {
     setState((prev) => ({ ...prev, activeSessionId: sessionId }));
     setSelectedMessageId(null);
@@ -190,35 +200,32 @@ export default function ChatPage() {
     mutationFn: async ({ 
       sessionId, 
       model, 
-      message, 
-      isFirstMessage, 
       currentAgent, 
-      conversation 
+      messages: msgList,
+      intentSystemPrompt,
+      runtimeSystemPrompt,
     }: { 
       sessionId: string; 
       model: string; 
-      message: string; 
-      isFirstMessage: boolean; 
       currentAgent: string | null; 
-      conversation: { role: "user" | "assistant"; content: string }[];
+      messages: { role: "user" | "assistant"; content: string }[];
+      intentSystemPrompt?: string;
+      runtimeSystemPrompt?: string;
     }) => {
       const HARDCODED_SESSION_ID = "c2c1dafa-273f-4c0f-bf5a-8ef8232a4cb5";
       
-      let payload;
-      if (isFirstMessage) {
-        payload = {
-          first_message: message,
-          session_id: HARDCODED_SESSION_ID,
-          model,
-        };
-      } else {
-        payload = {
-          first_message: null,
-          current_agent: currentAgent,
-          session_id: HARDCODED_SESSION_ID,
-          model,
-          conversation,
-        };
+      const payload: Record<string, unknown> = {
+        current_agent: currentAgent || "DefaultAgent",
+        session_id: HARDCODED_SESSION_ID,
+        model,
+        messages: msgList,
+      };
+      
+      if (intentSystemPrompt) {
+        payload.intent_system_prompt = intentSystemPrompt;
+      }
+      if (runtimeSystemPrompt) {
+        payload.runtime_system_prompt = runtimeSystemPrompt;
       }
       
       const response = await apiRequest("POST", "/api/webhook", payload);
@@ -373,17 +380,16 @@ export default function ChatPage() {
     };
 
     const existingMessages = activeSession.messages;
-    const isFirstMessage = existingMessages.length === 0;
     const conversationWithNewMessage = buildConversationHistory([...existingMessages, userMessage]);
 
     addMessageToSession(activeSessionId, userMessage);
     sendMessageMutation.mutate({ 
       sessionId: activeSessionId, 
       model: selectedModel, 
-      message: text,
-      isFirstMessage,
       currentAgent: activeSession.currentAgent,
-      conversation: conversationWithNewMessage,
+      messages: conversationWithNewMessage,
+      intentSystemPrompt: activeSession.intentSystemPrompt,
+      runtimeSystemPrompt: activeSession.runtimeSystemPrompt,
     });
   };
 
@@ -430,13 +436,19 @@ export default function ChatPage() {
               <h1 className="font-semibold text-lg hidden sm:block">Eval Harness</h1>
             </div>
             
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
               <ModelSelector
                 models={models}
                 selectedModel={selectedModel}
                 onModelSelect={setSelectedModel}
                 isLoading={modelsQuery.isLoading}
                 error={modelsQuery.error ? "Failed to load" : null}
+              />
+              <PromptEditor
+                intentSystemPrompt={activeSession?.intentSystemPrompt}
+                runtimeSystemPrompt={activeSession?.runtimeSystemPrompt}
+                onSave={handleSavePrompts}
+                disabled={messages.length > 0}
               />
               <ThemeToggle />
             </div>
