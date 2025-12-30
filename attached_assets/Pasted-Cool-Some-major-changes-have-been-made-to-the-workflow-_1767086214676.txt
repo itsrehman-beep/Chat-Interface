@@ -1,0 +1,68 @@
+Cool!
+
+Some major changes have been made to the workflow we are calling so you will need to make adjustments:
+
+(1) The 'conversation' field has been changed to 'messages' it is still and list of user/assistant messages as before though, there is no longer any first_message field expected in the http request, starting messages are sent within conversation like:
+
+{
+  "first_message": null,
+  "current_agent": "FetchAccountsAgent",
+  "session_id": "c2c1dafa-273f-4c0f-bf5a-8ef8232a4cb5",
+  "model": "openai/gpt-oss-120b",
+  "conversation": [
+    {
+      "role": "user",
+      "content": "Show me my beneficiaries"
+    }
+  ]
+}
+
+Now, when a user first starts a conversation before they send a message they need to be able to modify 2 things that are set at the start of every convo, the intent analyzer prompt and the runtime prompt, they both have default which are too large for me to paste here; add some placeholders in the code for now, which i will later replace with the actual values
+
+(2) There are two new things that can be passed to the HTTP request body now, they are intent_ssytem_prompt nd runtime_system_prompt, the user should have to press another button a lil out the way to access them, they will have default values (which are too large for me to paste here so put placeholders there for now), if the user does no changes to them then these variables aren't even mentioned in the JSON body
+
+(3) Make the widget chosen be visible in the response if it is, we can see if it is the last response content from the aissistant in the runtime prompt response:
+
+json
+{
+  "type": "bank_accounts_carousel_widget",
+  "props": {
+    "accounts": [
+      {
+        "id": "A0002",
+        "name": "Checking",
+        "accountNumber": "A0002",
+        "currency": "USD",
+        "balance": "$6,677.25",
+        "nickname": "Main Checking"
+      },
+      {
+        "id": "A0007",
+        "name": "Savings",
+        "accountNumber": "A0007",
+        "currency": "RMB",
+        "balance": "¥34,813.04",
+        "nickname": "China Transactions"
+      },
+      {
+        "id": "A0001",
+        "name": "Savings",
+        "accountNumber": "A0001",
+        "currency": "USD",
+        "balance": "$18,436.56",
+        "nickname": "Extra Savings"
+      },
+      {
+        "id": "A0015",
+        "name": "Credit Card",
+        "accountNumber": "A0015",
+        "currency": "USD",
+        "balance": "$0.00",
+        "nickname": "Rewards Card"
+      }
+    ]
+  }
+}
+
+the widget chosen is the one in type (bank_accounts_carousel_widget)
+
