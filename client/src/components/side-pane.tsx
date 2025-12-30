@@ -341,38 +341,55 @@ function extractReasoningsFromStep(itemObj: Record<string, unknown>): string[] {
   return reasonings;
 }
 
-function extractWidgetType(content: unknown, depth = 0): { type: string; props?: Record<string, unknown> } | null {
-  if (!content || depth > 5) return null;
+function extractWidgetFromJson(obj: unknown): { type: string; props?: Record<string, unknown> } | null {
+  if (!obj || typeof obj !== "object") return null;
   
-  if (typeof content === "object" && content !== null) {
-    const obj = content as Record<string, unknown>;
-    
-    if (typeof obj.type === "string" && obj.type.toLowerCase().includes("widget")) {
-      return {
-        type: obj.type,
-        props: obj.props as Record<string, unknown> | undefined,
-      };
-    }
-    
-    for (const key of Object.keys(obj)) {
-      const result = extractWidgetType(obj[key], depth + 1);
-      if (result) return result;
+  const record = obj as Record<string, unknown>;
+  if (typeof record.type === "string" && record.type.toLowerCase().includes("widget")) {
+    return {
+      type: record.type,
+      props: record.props as Record<string, unknown> | undefined,
+    };
+  }
+  return null;
+}
+
+function extractWidgetFromContentString(contentStr: string): { type: string; props?: Record<string, unknown> } | null {
+  const cleanContent = contentStr
+    .replace(/<think>[\s\S]*?<\/think>/g, "")
+    .replace(/<think>[\s\S]*/g, "")
+    .trim();
+  
+  if (!cleanContent) return null;
+  
+  try {
+    const parsed = JSON.parse(cleanContent);
+    return extractWidgetFromJson(parsed);
+  } catch {
+    const jsonMatch = cleanContent.match(/\{[\s\S]*"type"\s*:\s*"[^"]*widget[^"]*"[\s\S]*\}/i);
+    if (jsonMatch) {
+      try {
+        const parsed = JSON.parse(jsonMatch[0]);
+        return extractWidgetFromJson(parsed);
+      } catch {
+        // Could not parse JSON
+      }
     }
   }
   
-  if (typeof content === "string") {
-    try {
-      const parsed = JSON.parse(content);
-      return extractWidgetType(parsed, depth + 1);
-    } catch {
-      // Not JSON, ignore
-    }
-  }
+  return null;
+}
+
+function extractWidgetFromRuntimePrompt(data: unknown[] | Record<string, unknown>): { type: string; props?: Record<string, unknown> } | null {
+  const promptArray = Array.isArray(data) ? data : [data];
   
-  if (Array.isArray(content)) {
-    for (const item of content) {
-      const result = extractWidgetType(item, depth + 1);
-      if (result) return result;
+  for (const item of promptArray) {
+    if (!item || typeof item !== "object") continue;
+    const itemObj = item as Record<string, unknown>;
+    
+    if (itemObj.role === "assistant" && typeof itemObj.content === "string") {
+      const widget = extractWidgetFromContentString(itemObj.content);
+      if (widget) return widget;
     }
   }
   
@@ -387,7 +404,7 @@ function RuntimePromptSection({ data }: { data: unknown[] | Record<string, unkno
   const allToolCalls: { name: string; arguments: string }[] = [];
   const allUsages: Record<string, unknown>[] = [];
   let finalContent = "";
-  let widgetInfo: { type: string; props?: Record<string, unknown> } | null = null;
+  const widgetInfo = extractWidgetFromRuntimePrompt(data);
 
   for (const item of promptArray) {
     if (!item || typeof item !== "object") continue;
@@ -408,10 +425,6 @@ function RuntimePromptSection({ data }: { data: unknown[] | Record<string, unkno
       if (cleanContent) {
         finalContent = cleanContent;
       }
-    }
-    
-    if (!widgetInfo) {
-      widgetInfo = extractWidgetType(itemObj);
     }
     
     if (!finalContent && itemObj.message && typeof itemObj.message === "object") {
