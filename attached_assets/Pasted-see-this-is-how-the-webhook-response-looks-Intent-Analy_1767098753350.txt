@@ -1,0 +1,148 @@
+see this is how the webhook response looks:
+
+[
+  {
+    "Intent_Analyzer_Response": {
+      "MTX_SESSION_ID": "194171",
+      "MTX_SELECTED_AGENT": "FetchAccountsAgent",
+      "MTX_REASONING": "The user is requesting to view their bank accounts, which directly matches the FetchAccountsAgent's purpose of retrieving and presenting linked bank account details. The agent's reasoning patterns include \"User wants to view all their bank accounts\" and \"User needs to check account balances,\" both relevant to the user's intent.",
+      "MTX_LLM": "qwen/qwen3-32b",
+      "MTX_INPUT_TOKENS": 59311,
+      "MTX_OUTPUT_TOKENS": 209,
+      "MTX_PROCESSED_DATE": "30-12-2025 15:50:25.692+04:00"
+    },
+    "RunTime_Prompt_Response": [
+      {
+        "role": "assistant",
+        "content": "<think>\nOkay, the user wants to see their bank accounts using a widget. Let me check the available tools. The GetAccounts function is there, which retrieves all account details. I need to call that first. Once I get the data, I can format it into the Bank Accounts Carousel widget. Make sure to extract the necessary fields like account number, balance, currency, and nickname. If there's no data, inform the user. Also, check for any missing fields and handle them gracefully. Alright, let's start by making the tool call.\n</think>",
+        "refusal": null,
+        "reasoning": null,
+        "tool_calls": [
+          {
+            "type": "function",
+            "index": 0,
+            "id": "b21d8a72d",
+            "function": {
+              "name": "GetAccounts",
+              "arguments": "{}"
+            }
+          }
+        ],
+        "finish_reason": "tool_calls",
+        "usage": {
+          "prompt_tokens": 8317,
+          "completion_tokens": 129,
+          "total_tokens": 8446,
+          "cost": 0.00343,
+          "is_byok": false,
+          "prompt_tokens_details": {
+            "cached_tokens": 0,
+            "audio_tokens": 0,
+            "video_tokens": 0
+          },
+          "cost_details": {
+            "upstream_inference_cost": null,
+            "upstream_inference_prompt_cost": 0.0033268,
+            "upstream_inference_completions_cost": 0.0001032
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 0,
+            "image_tokens": 0
+          }
+        }
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "refusal": null,
+        "reasoning": "Okay, the user asked to see their bank accounts using a widget. I called the GetAccounts function and got the response with four accounts. Now I need to format this data into the Bank Accounts Carousel widget.\n\nFirst, I'll check each account to extract the necessary fields: id, name, accountNumber (from AccountId), currency, balance (from CalculatedBalance), and nickname. \n\nFor the first account, AccountId is A0002, so accountNumber is A0002. The balance is $6,677.25, currency is USD, and nickname is \"Main Checking\". \n\nThe second account has AccountId A0007, balance ¥34,813.04, currency RMB, nickname \"China Transactions\". \n\nThird account, AccountId A0001, balance $18,436.56, USD, nickname \"Extra Savings\". \n\nFourth account, AccountId A0015, balance $0.00, USD, nickname \"Rewards Card\". \n\nI need to make sure all required fields are present. All accounts have the necessary data. Now, format the balance with the correct currency symbols and proper formatting. \n\nFor USD, use the dollar sign, and for RMB, the yen symbol. Round the balances to two decimal places. \n\nConstruct the widget with these details. Each account will be a box in the carousel with the nickname, balance, currency, and account number. \n\nDouble-check that all accounts are included and the data is accurate. No missing fields, so proceed to create the widget JSON.\n</think>\n\njson\n{\n  \"type\": \"bank_accounts_carousel_widget\",\n  \"props\": {\n    \"accounts\": [\n      {\n        \"id\": \"A0002\",\n        \"name\": \"Checking\",\n        \"accountNumber\": \"A0002\",\n        \"currency\": \"USD\",\n        \"balance\": \"$6,677.25\",\n        \"nickname\": \"Main Checking\"\n      },\n      {\n        \"id\": \"A0007\",\n        \"name\": \"Savings\",\n        \"accountNumber\": \"A0007\",\n        \"currency\": \"RMB\",\n        \"balance\": \"¥34,813.04\",\n        \"nickname\": \"China Transactions\"\n      },\n      {\n        \"id\": \"A0001\",\n        \"name\": \"Savings\",\n        \"accountNumber\": \"A0001\",\n        \"currency\": \"USD\",\n        \"balance\": \"$18,436.56\",\n        \"nickname\": \"Extra Savings\"\n      },\n      {\n        \"id\": \"A0015\",\n        \"name\": \"CreditCard\",\n        \"accountNumber\": \"A0015\",\n        \"currency\": \"USD\",\n        \"balance\": \"$0.00\",\n        \"nickname\": \"Rewards Card\"\n      }\n    ]\n  }\n}",
+        "reasoning_details": [
+          {
+            "format": null,
+            "index": 0,
+            "type": "reasoning.text",
+            "text": "Okay, the user asked to see their bank accounts using a widget. I called the GetAccounts function and got the response with four accounts. Now I need to format this data into the Bank Accounts Carousel widget.\n\nFirst, I'll check each account to extract the necessary fields: id, name, accountNumber (from AccountId), currency, balance (from CalculatedBalance), and nickname. \n\nFor the first account, AccountId is A0002, so accountNumber is A0002. The balance is $6,677.25, currency is USD, and nickname is \"Main Checking\". \n\nThe second account has AccountId A0007, balance ¥34,813.04, currency RMB, nickname \"China Transactions\". \n\nThird account, AccountId A0001, balance $18,436.56, USD, nickname \"Extra Savings\". \n\nFourth account, AccountId A0015, balance $0.00, USD, nickname \"Rewards Card\". \n\nI need to make sure all required fields are present. All accounts have the necessary data. Now, format the balance with the correct currency symbols and proper formatting. \n\nFor USD, use the dollar sign, and for RMB, the yen symbol. Round the balances to two decimal places. \n\nConstruct the widget with these details. Each account will be a box in the carousel with the nickname, balance, currency, and account number. \n\nDouble-check that all accounts are included and the data is accurate. No missing fields, so proceed to create the widget JSON.\n</think>\n\njson\n{\n  \"type\": \"bank_accounts_carousel_widget\",\n  \"props\": {\n    \"accounts\": [\n      {\n        \"id\": \"A0002\",\n        \"name\": \"Checking\",\n        \"accountNumber\": \"A0002\",\n        \"currency\": \"USD\",\n        \"balance\": \"$6,677.25\",\n        \"nickname\": \"Main Checking\"\n      },\n      {\n        \"id\": \"A0007\",\n        \"name\": \"Savings\",\n        \"accountNumber\": \"A0007\",\n        \"currency\": \"RMB\",\n        \"balance\": \"¥34,813.04\",\n        \"nickname\": \"China Transactions\"\n      },\n      {\n        \"id\": \"A0001\",\n        \"name\": \"Savings\",\n        \"accountNumber\": \"A0001\",\n        \"currency\": \"USD\",\n        \"balance\": \"$18,436.56\",\n        \"nickname\": \"Extra Savings\"\n      },\n      {\n        \"id\": \"A0015\",\n        \"name\": \"CreditCard\",\n        \"accountNumber\": \"A0015\",\n        \"currency\": \"USD\",\n        \"balance\": \"$0.00\",\n        \"nickname\": \"Rewards Card\"\n      }\n    ]\n  }\n}"
+          }
+        ],
+        "finish_reason": "stop",
+        "usage": {
+          "prompt_tokens": 8871,
+          "completion_tokens": 623,
+          "total_tokens": 9494,
+          "cost": 0.0040468,
+          "is_byok": false,
+          "prompt_tokens_details": {
+            "cached_tokens": 7840,
+            "audio_tokens": 0,
+            "video_tokens": 0
+          },
+          "cost_details": {
+            "upstream_inference_cost": null,
+            "upstream_inference_prompt_cost": 0.0035484,
+            "upstream_inference_completions_cost": 0.0004984
+          },
+          "completion_tokens_details": {
+            "reasoning_tokens": 606,
+            "image_tokens": 0
+          }
+        }
+      }
+    ],
+    "Tool_Request_Response": [
+      {
+        "AccountId": "A0002",
+        "CustomerId": "C0001",
+        "AccountType": "Checking",
+        "Currency": "USD",
+        "Status": "Active",
+        "IBAN": "US09876543210987654321",
+        "CalculatedBalance": 6677.249,
+        "IsDefault": true,
+        "OverdraftLimit": 1000,
+        "AccountNickname": "Main Checking",
+        "AccountImageUrl": "http://bank-emulator-dev.prod-k8s.aiatcore.com/static/images/accounts/checking.png"
+      },
+      {
+        "AccountId": "A0007",
+        "CustomerId": "C0001",
+        "AccountType": "Savings",
+        "Currency": "RMB",
+        "Status": "Active",
+        "IBAN": "CN55556666777788889999",
+        "CalculatedBalance": 34813.035,
+        "IsDefault": false,
+        "Interest": 1.8,
+        "AccountNickname": "China Transactions",
+        "AccountImageUrl": "http://bank-emulator-dev.prod-k8s.aiatcore.com/static/images/accounts/savings.png"
+      },
+      {
+        "AccountId": "A0001",
+        "CustomerId": "C0001",
+        "AccountType": "Savings",
+        "Currency": "USD",
+        "Status": "Active",
+        "IBAN": "US04392394934",
+        "CalculatedBalance": 18436.555,
+        "IsDefault": false,
+        "Interest": 1,
+        "AccountNickname": "Extra Savings",
+        "AccountImageUrl": "http://bank-emulator-dev.prod-k8s.aiatcore.com/static/images/accounts/savings.png"
+      },
+      {
+        "AccountId": "A0015",
+        "CustomerId": "C0001",
+        "AccountType": "CreditCard",
+        "Currency": "USD",
+        "Status": "Active",
+        "CalculatedBalance": 0,
+        "IsDefault": false,
+        "CreditLimit": 3000,
+        "AvailableCredit": 3000,
+        "AccountNickname": "Rewards Card",
+        "AccountImageUrl": "http://bank-emulator-dev.prod-k8s.aiatcore.com/static/images/accounts/creditcard.png"
+      }
+    ]
+  }
+]
+
+you need to check inside the RunTime_Prompt_Response you need to look at messages where the role is "assistant" and you need to check it's associated content field in one of them you will see the widget, is that what you are doing?
