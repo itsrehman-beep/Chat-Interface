@@ -49,9 +49,15 @@ A React-based chat interface for interacting with Cerebras/OpenRouter AI models 
 - **URL**: https://n8n.dev01.modelmatrix.ai/webhook/d87c25a6-5ebe-4dbe-9f94-504eab7aa23b
 - **Session ID**: Hardcoded to `c2c1dafa-273f-4c0f-bf5a-8ef8232a4cb5`
 - **Method**: POST
-- **First message body**: `{ first_message: string, session_id: string, model: string }`
-- **Follow-up message body**: `{ first_message: null, current_agent: string, session_id: string, model: string, conversation: array }`
+- **Request body**: `{ first_message: null, current_agent: string, session_id: string, model: string, messages: array }`
+- **Optional fields**: `intent_system_prompt`, `runtime_system_prompt` (only included if user customizes them)
 - **Response**: Array containing Tool_Request_Response, Intent_Analyzer_Response (first message only), RunTime_Prompt_Response
+
+## System Prompts
+Users can customize system prompts before starting a conversation via the settings (gear) icon:
+- **Intent System Prompt**: Controls how intent is analyzed
+- **Runtime System Prompt**: Controls the runtime behavior
+Prompts are stored per-session and only included in requests if modified from defaults.
 
 ## Response Parsing
 The `RunTime_Prompt_Response` can be an array of multiple steps (multi-step tool chain):

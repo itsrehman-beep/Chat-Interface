@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, ChevronRight, X, Zap, Brain, Coins, Clock, Wrench } from "lucide-react";
+import { ChevronDown, ChevronRight, X, Zap, Brain, Coins, Clock, Wrench, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -341,6 +341,43 @@ function extractReasoningsFromStep(itemObj: Record<string, unknown>): string[] {
   return reasonings;
 }
 
+function extractWidgetType(content: unknown): { type: string; props?: Record<string, unknown> } | null {
+  if (!content) return null;
+  
+  if (typeof content === "object" && content !== null) {
+    const obj = content as Record<string, unknown>;
+    if (typeof obj.type === "string" && obj.type.includes("widget")) {
+      return {
+        type: obj.type,
+        props: obj.props as Record<string, unknown> | undefined,
+      };
+    }
+  }
+  
+  if (typeof content === "string") {
+    try {
+      const parsed = JSON.parse(content);
+      if (typeof parsed === "object" && parsed !== null && typeof parsed.type === "string" && parsed.type.includes("widget")) {
+        return {
+          type: parsed.type,
+          props: parsed.props,
+        };
+      }
+    } catch {
+      // Not JSON, ignore
+    }
+  }
+  
+  if (Array.isArray(content)) {
+    for (const item of content) {
+      const result = extractWidgetType(item);
+      if (result) return result;
+    }
+  }
+  
+  return null;
+}
+
 function RuntimePromptSection({ data }: { data: unknown[] | Record<string, unknown> }) {
   const promptArray = Array.isArray(data) ? data : [data];
   
@@ -349,6 +386,7 @@ function RuntimePromptSection({ data }: { data: unknown[] | Record<string, unkno
   const allToolCalls: { name: string; arguments: string }[] = [];
   const allUsages: Record<string, unknown>[] = [];
   let finalContent = "";
+  let widgetInfo: { type: string; props?: Record<string, unknown> } | null = null;
 
   for (const item of promptArray) {
     if (!item || typeof item !== "object") continue;
@@ -371,6 +409,10 @@ function RuntimePromptSection({ data }: { data: unknown[] | Record<string, unkno
       }
     }
     
+    if (!widgetInfo) {
+      widgetInfo = extractWidgetType(itemObj.content);
+    }
+    
     if (!finalContent && itemObj.message && typeof itemObj.message === "object") {
       const msgObj = itemObj.message as Record<string, unknown>;
       const msgContentText = extractTextFromContentField(msgObj.content);
@@ -379,6 +421,9 @@ function RuntimePromptSection({ data }: { data: unknown[] | Record<string, unkno
         if (cleanContent) {
           finalContent = cleanContent;
         }
+      }
+      if (!widgetInfo) {
+        widgetInfo = extractWidgetType(msgObj.content);
       }
     }
     
@@ -401,6 +446,25 @@ function RuntimePromptSection({ data }: { data: unknown[] | Record<string, unkno
 
   return (
     <div className="space-y-4">
+      {widgetInfo && (
+        <div className="space-y-2">
+          <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+            <LayoutGrid className="h-3 w-3 text-primary" />
+            Widget Selected
+          </label>
+          <div className="bg-primary/10 border border-primary/20 rounded-md p-3">
+            <Badge variant="default" className="text-sm font-mono" data-testid="badge-widget-type">
+              {widgetInfo.type}
+            </Badge>
+            {widgetInfo.props && (
+              <div className="mt-2 text-xs text-muted-foreground">
+                {Object.keys(widgetInfo.props).length} prop{Object.keys(widgetInfo.props).length !== 1 ? "s" : ""}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {allReasonings.length > 0 && (
         <div className="space-y-2">
           <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-2">
