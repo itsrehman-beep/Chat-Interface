@@ -65,7 +65,18 @@ export async function registerRoutes(
 
       const responseText = await response.text();
       console.log("Webhook response status:", response.status);
-      console.log("Webhook response body:", responseText.substring(0, 500));
+      console.log("Webhook response body (full):", responseText);
+      
+      // Log parsed structure for debugging
+      try {
+        const parsed = JSON.parse(responseText);
+        if (Array.isArray(parsed)) {
+          console.log("Response is array with", parsed.length, "items");
+          parsed.forEach((item, i) => {
+            console.log(`Item ${i} keys:`, Object.keys(item));
+          });
+        }
+      } catch { /* ignore */ }
 
       if (!response.ok) {
         console.error("Webhook error:", responseText);

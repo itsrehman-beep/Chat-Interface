@@ -355,6 +355,13 @@ function extractWidgetFromJson(obj: unknown): { type: string; props?: Record<str
 }
 
 function extractWidgetFromContentString(contentStr: string): { type: string; props?: Record<string, unknown> } | null {
+  // First try regex directly on the raw string - this is the most reliable
+  const widgetTypeMatch = contentStr.match(/"type"\s*:\s*"([^"]*widget[^"]*)"/i);
+  if (widgetTypeMatch) {
+    return { type: widgetTypeMatch[1] };
+  }
+  
+  // Clean content and try again
   const cleanContent = contentStr
     .replace(/<think>[\s\S]*?<\/think>/g, "")
     .replace(/<think>[\s\S]*/g, "")
@@ -362,17 +369,25 @@ function extractWidgetFromContentString(contentStr: string): { type: string; pro
   
   if (!cleanContent) return null;
   
+  // Try regex on cleaned content
+  const cleanWidgetMatch = cleanContent.match(/"type"\s*:\s*"([^"]*widget[^"]*)"/i);
+  if (cleanWidgetMatch) {
+    return { type: cleanWidgetMatch[1] };
+  }
+  
+  // Try JSON parsing as fallback
   try {
     const parsed = JSON.parse(cleanContent);
     return extractWidgetFromJson(parsed);
   } catch {
-    const jsonMatch = cleanContent.match(/\{[\s\S]*"type"\s*:\s*"[^"]*widget[^"]*"[\s\S]*\}/i);
-    if (jsonMatch) {
+    const braceStart = cleanContent.indexOf("{");
+    const braceEnd = cleanContent.lastIndexOf("}");
+    if (braceStart !== -1 && braceEnd > braceStart) {
       try {
-        const parsed = JSON.parse(jsonMatch[0]);
+        const parsed = JSON.parse(cleanContent.slice(braceStart, braceEnd + 1));
         return extractWidgetFromJson(parsed);
       } catch {
-        // Could not parse JSON
+        // JSON parsing failed
       }
     }
   }
@@ -387,8 +402,65 @@ function extractWidgetFromRuntimePrompt(data: unknown[] | Record<string, unknown
     if (!item || typeof item !== "object") continue;
     const itemObj = item as Record<string, unknown>;
     
-    if (itemObj.role === "assistant" && typeof itemObj.content === "string") {
+    // Try direct string content first
+    if (typeof itemObj.content === "string") {
       const widget = extractWidgetFromContentString(itemObj.content);
+      if (widget) return widget;
+    }
+    
+    // Try reasoning field (widget JSON is often in reasoning after </think> tag)
+    if (typeof itemObj.reasoning === "string") {
+      const widget = extractWidgetFromContentString(itemObj.reasoning);
+      if (widget) return widget;
+    }
+    
+    // Try reasoning_details array
+    if (Array.isArray(itemObj.reasoning_details)) {
+      for (const detail of itemObj.reasoning_details) {
+        if (detail && typeof detail === "object") {
+          const detailObj = detail as Record<string, unknown>;
+          if (typeof detailObj.text === "string") {
+            const widget = extractWidgetFromContentString(detailObj.text);
+            if (widget) return widget;
+          }
+        }
+      }
+    }
+    
+    // Try array content
+    if (Array.isArray(itemObj.content)) {
+      for (const contentItem of itemObj.content) {
+        if (typeof contentItem === "string") {
+          const widget = extractWidgetFromContentString(contentItem);
+          if (widget) return widget;
+        }
+        if (contentItem && typeof contentItem === "object") {
+          const contentObj = contentItem as Record<string, unknown>;
+          if (typeof contentObj.text === "string") {
+            const widget = extractWidgetFromContentString(contentObj.text);
+            if (widget) return widget;
+          }
+          if (typeof contentObj.content === "string") {
+            const widget = extractWidgetFromContentString(contentObj.content);
+            if (widget) return widget;
+          }
+        }
+      }
+    }
+    
+    // Try nested message object
+    if (itemObj.message && typeof itemObj.message === "object") {
+      const msgObj = itemObj.message as Record<string, unknown>;
+      if (typeof msgObj.content === "string") {
+        const widget = extractWidgetFromContentString(msgObj.content);
+        if (widget) return widget;
+      }
+    }
+    
+    // Try extractTextFromContentField as fallback
+    const contentText = extractTextFromContentField(itemObj.content);
+    if (contentText) {
+      const widget = extractWidgetFromContentString(contentText);
       if (widget) return widget;
     }
   }
@@ -399,12 +471,21 @@ function extractWidgetFromRuntimePrompt(data: unknown[] | Record<string, unknown
 function RuntimePromptSection({ data }: { data: unknown[] | Record<string, unknown> }) {
   const promptArray = Array.isArray(data) ? data : [data];
   
+  // Debug: log the raw data structure
+  console.log("[RuntimePromptSection] Raw data:", JSON.stringify(data, null, 2).slice(0, 3000));
+  
   const allReasonings: string[] = [];
   const seenReasoningKeys = new Set<string>();
   const allToolCalls: { name: string; arguments: string }[] = [];
   const allUsages: Record<string, unknown>[] = [];
   let finalContent = "";
   const widgetInfo = extractWidgetFromRuntimePrompt(data);
+  
+  console.log("[WIDGET_DEBUG] widgetInfo:", widgetInfo);
+  console.log("[WIDGET_DEBUG] widgetInfo truthy:", !!widgetInfo);
+  if (widgetInfo) {
+    console.log("[WIDGET_DEBUG] widgetInfo.type:", widgetInfo.type);
+  }
 
   for (const item of promptArray) {
     if (!item || typeof item !== "object") continue;
@@ -455,10 +536,16 @@ function RuntimePromptSection({ data }: { data: unknown[] | Record<string, unkno
     }
   }
 
+  // Add debug element
+  console.log("[WIDGET_DEBUG] About to render. widgetInfo exists:", !!widgetInfo);
+  
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-testid="runtime-prompt-section">
+      <div data-testid="debug-widget-info" data-widget-found={String(!!widgetInfo)}>
+        {/* Debug marker */}
+      </div>
       {widgetInfo && (
-        <div className="space-y-2">
+        <div className="space-y-2" data-testid="widget-section">
           <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-2">
             <LayoutGrid className="h-3 w-3 text-primary" />
             Widget Selected
