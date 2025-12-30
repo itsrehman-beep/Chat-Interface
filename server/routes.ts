@@ -40,7 +40,6 @@ export async function registerRoutes(
       }
 
       const webhookPayload: Record<string, unknown> = {
-        first_message: null,
         current_agent: current_agent || "DefaultAgent",
         session_id,
         model,

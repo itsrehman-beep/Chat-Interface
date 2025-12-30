@@ -59,6 +59,12 @@ Users can customize system prompts before starting a conversation via the settin
 - **Runtime System Prompt**: Controls the runtime behavior
 Prompts are stored per-session and only included in requests if modified from defaults.
 
+## Widget Type Detection
+The side pane inspector detects and displays widget types from assistant responses:
+- Looks for `type` field containing "widget" (e.g., "bank_accounts_carousel_widget")
+- Shows widget type as a badge with prop count
+- Works with both direct objects and JSON-parsed content
+
 ## Response Parsing
 The `RunTime_Prompt_Response` can be an array of multiple steps (multi-step tool chain):
 - Each step may contain: `content`, `reasoning`, `reasoning_details`, `tool_calls`, `usage`
