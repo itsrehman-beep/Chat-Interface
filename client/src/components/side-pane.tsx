@@ -341,28 +341,29 @@ function extractReasoningsFromStep(itemObj: Record<string, unknown>): string[] {
   return reasonings;
 }
 
-function extractWidgetType(content: unknown): { type: string; props?: Record<string, unknown> } | null {
-  if (!content) return null;
+function extractWidgetType(content: unknown, depth = 0): { type: string; props?: Record<string, unknown> } | null {
+  if (!content || depth > 5) return null;
   
   if (typeof content === "object" && content !== null) {
     const obj = content as Record<string, unknown>;
-    if (typeof obj.type === "string" && obj.type.includes("widget")) {
+    
+    if (typeof obj.type === "string" && obj.type.toLowerCase().includes("widget")) {
       return {
         type: obj.type,
         props: obj.props as Record<string, unknown> | undefined,
       };
+    }
+    
+    for (const key of Object.keys(obj)) {
+      const result = extractWidgetType(obj[key], depth + 1);
+      if (result) return result;
     }
   }
   
   if (typeof content === "string") {
     try {
       const parsed = JSON.parse(content);
-      if (typeof parsed === "object" && parsed !== null && typeof parsed.type === "string" && parsed.type.includes("widget")) {
-        return {
-          type: parsed.type,
-          props: parsed.props,
-        };
-      }
+      return extractWidgetType(parsed, depth + 1);
     } catch {
       // Not JSON, ignore
     }
@@ -370,7 +371,7 @@ function extractWidgetType(content: unknown): { type: string; props?: Record<str
   
   if (Array.isArray(content)) {
     for (const item of content) {
-      const result = extractWidgetType(item);
+      const result = extractWidgetType(item, depth + 1);
       if (result) return result;
     }
   }
@@ -410,7 +411,7 @@ function RuntimePromptSection({ data }: { data: unknown[] | Record<string, unkno
     }
     
     if (!widgetInfo) {
-      widgetInfo = extractWidgetType(itemObj.content);
+      widgetInfo = extractWidgetType(itemObj);
     }
     
     if (!finalContent && itemObj.message && typeof itemObj.message === "object") {
@@ -421,9 +422,6 @@ function RuntimePromptSection({ data }: { data: unknown[] | Record<string, unkno
         if (cleanContent) {
           finalContent = cleanContent;
         }
-      }
-      if (!widgetInfo) {
-        widgetInfo = extractWidgetType(msgObj.content);
       }
     }
     

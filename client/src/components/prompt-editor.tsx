@@ -29,13 +29,13 @@ export function PromptEditor({
   disabled 
 }: PromptEditorProps) {
   const [open, setOpen] = useState(false);
-  const [intentPrompt, setIntentPrompt] = useState(intentSystemPrompt || "");
-  const [runtimePrompt, setRuntimePrompt] = useState(runtimeSystemPrompt || "");
+  const [intentPrompt, setIntentPrompt] = useState(intentSystemPrompt || DEFAULT_INTENT_SYSTEM_PROMPT);
+  const [runtimePrompt, setRuntimePrompt] = useState(runtimeSystemPrompt || DEFAULT_RUNTIME_SYSTEM_PROMPT);
 
   const handleOpen = (isOpen: boolean) => {
     if (isOpen) {
-      setIntentPrompt(intentSystemPrompt || "");
-      setRuntimePrompt(runtimeSystemPrompt || "");
+      setIntentPrompt(intentSystemPrompt || DEFAULT_INTENT_SYSTEM_PROMPT);
+      setRuntimePrompt(runtimeSystemPrompt || DEFAULT_RUNTIME_SYSTEM_PROMPT);
     }
     setOpen(isOpen);
   };
@@ -53,8 +53,8 @@ export function PromptEditor({
   };
 
   const handleReset = () => {
-    setIntentPrompt("");
-    setRuntimePrompt("");
+    setIntentPrompt(DEFAULT_INTENT_SYSTEM_PROMPT);
+    setRuntimePrompt(DEFAULT_RUNTIME_SYSTEM_PROMPT);
   };
 
   const hasCustomPrompts = intentSystemPrompt || runtimeSystemPrompt;
