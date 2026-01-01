@@ -7,6 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { 
   Play, 
   ClipboardCheck, 
@@ -21,6 +27,46 @@ import {
 import { Link } from "wouter";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { apiRequest } from "@/lib/queryClient";
+
+function parseAndFormatContent(content: string): { formatted: string; isJson: boolean } {
+  if (!content || typeof content !== "string") {
+    return { formatted: content || "", isJson: false };
+  }
+  
+  try {
+    const parsed = JSON.parse(content);
+    return { formatted: JSON.stringify(parsed, null, 2), isJson: true };
+  } catch {
+    return { formatted: content, isJson: false };
+  }
+}
+
+function extractSummary(content: string): string {
+  if (!content) return "";
+  
+  try {
+    const parsed = JSON.parse(content);
+    
+    if (parsed.messages && Array.isArray(parsed.messages)) {
+      const lastUserMsg = [...parsed.messages].reverse().find(m => m.role === "user");
+      if (lastUserMsg?.content) {
+        return `User: "${lastUserMsg.content.slice(0, 100)}${lastUserMsg.content.length > 100 ? "..." : ""}"`;
+      }
+    }
+    
+    if (parsed.response) {
+      const cleanResponse = parsed.response
+        .replace(/<answer>|<\/answer>/g, "")
+        .replace(/```json[\s\S]*?```/g, "[JSON widget]")
+        .trim();
+      return cleanResponse.slice(0, 120) + (cleanResponse.length > 120 ? "..." : "");
+    }
+    
+    return JSON.stringify(parsed).slice(0, 100) + "...";
+  } catch {
+    return content.slice(0, 100) + (content.length > 100 ? "..." : "");
+  }
+}
 
 interface TestCase {
   rowIndex: number;
@@ -62,6 +108,15 @@ export default function BatchExecutorPage() {
   const [results, setResults] = useState<TestResult[]>([]);
   const [evaluations, setEvaluations] = useState<EvaluationResult[]>([]);
   const [currentRunId, setCurrentRunId] = useState<string | null>(null);
+  const [detailDialog, setDetailDialog] = useState<{
+    open: boolean;
+    title: string;
+    content: string;
+  }>({ open: false, title: "", content: "" });
+
+  const openDetailDialog = (title: string, content: string) => {
+    setDetailDialog({ open: true, title, content });
+  };
 
   const testCasesQuery = useQuery<TestCasesResponse>({
     queryKey: ["/api/test-cases"],
@@ -345,14 +400,32 @@ export default function BatchExecutorPage() {
                                     {id}
                                   </Badge>
                                 </td>
-                                <td className="p-3">
-                                  <p className="text-foreground line-clamp-2">
-                                    {input || <span className="text-muted-foreground italic">No input</span>}
+                                <td 
+                                  className="p-3"
+                                  onDoubleClick={(e) => {
+                                    e.stopPropagation();
+                                    if (input) openDetailDialog(`Input - ${id}`, input);
+                                  }}
+                                >
+                                  <p 
+                                    className="text-foreground line-clamp-2 cursor-pointer"
+                                    title="Double-click to view full content"
+                                  >
+                                    {input ? extractSummary(input) : <span className="text-muted-foreground italic">No input</span>}
                                   </p>
                                 </td>
-                                <td className="p-3">
-                                  <p className="text-muted-foreground line-clamp-2 font-mono text-xs">
-                                    {expectedOutput || <span className="italic">Not specified</span>}
+                                <td 
+                                  className="p-3"
+                                  onDoubleClick={(e) => {
+                                    e.stopPropagation();
+                                    if (expectedOutput) openDetailDialog(`Expected Output - ${id}`, expectedOutput);
+                                  }}
+                                >
+                                  <p 
+                                    className="text-muted-foreground line-clamp-2 cursor-pointer"
+                                    title="Double-click to view full content"
+                                  >
+                                    {expectedOutput ? extractSummary(expectedOutput) : <span className="italic">Not specified</span>}
                                   </p>
                                 </td>
                               </tr>
@@ -470,6 +543,25 @@ export default function BatchExecutorPage() {
           </Card>
         )}
       </div>
+
+      <Dialog 
+        open={detailDialog.open} 
+        onOpenChange={(open) => setDetailDialog(prev => ({ ...prev, open }))}
+      >
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle data-testid="dialog-title">{detailDialog.title}</DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="flex-1 mt-4">
+            <pre 
+              className="text-sm font-mono whitespace-pre-wrap bg-muted/30 p-4 rounded-md overflow-x-auto"
+              data-testid="dialog-content"
+            >
+              {parseAndFormatContent(detailDialog.content).formatted}
+            </pre>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
