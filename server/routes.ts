@@ -263,11 +263,30 @@ export async function registerRoutes(
         });
       }
 
-      const headers = gvizData.table.cols.map(
-        (col: { label: string }) => col.label || "",
-      );
+      // Log raw cols to debug
+      console.log("gviz cols:", JSON.stringify(gvizData.table.cols, null, 2));
+      console.log("gviz first row:", JSON.stringify(gvizData.table.rows[0], null, 2));
 
-      const testCases = gvizData.table.rows.map(
+      // Check if headers are in first row instead of col labels
+      let headers: string[] = gvizData.table.cols.map(
+        (col: { label: string; id: string }) => col.label || col.id || "",
+      );
+      
+      // If all headers are empty or just column letters, use first row as headers
+      const hasEmptyHeaders = headers.every((h: string) => !h || /^[A-Z]$/.test(h));
+      let dataRows = gvizData.table.rows;
+      
+      if (hasEmptyHeaders && gvizData.table.rows.length > 0) {
+        // Use first row as headers
+        const firstRow = gvizData.table.rows[0];
+        headers = firstRow.c.map((cell: { v: unknown } | null) => 
+          cell?.v !== undefined && cell?.v !== null ? String(cell.v) : ""
+        );
+        dataRows = gvizData.table.rows.slice(1);
+        console.log("Using first row as headers:", headers);
+      }
+
+      const testCases = dataRows.map(
         (row: { c: Array<{ v: unknown } | null> }, index: number) => {
           const rowData: Record<string, unknown> = { rowIndex: index + 1 };
           row.c.forEach((cell: { v: unknown } | null, colIndex: number) => {
