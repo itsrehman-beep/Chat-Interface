@@ -93,5 +93,17 @@ npm run dev
 ```
 Starts Express server on port 5000 with Vite dev server for frontend.
 
+## Batch Executor
+The Batch Executor page (`/batch`) allows running multiple test cases from a Google Sheet:
+- **Google Sheet**: https://docs.google.com/spreadsheets/d/1GXhMptDgVeen6gqn3rhulLa-0wSwXFVwwEBfNWoxxXU
+- **Sheet Name**: MTX_TESTCASES
+- **Features**:
+  - Browse and select test cases from the sheet
+  - Run selected test cases via batch executor webhook
+  - Evaluate results with scoring and pass/fail status
+- **Webhooks**:
+  - Batch Executor: `https://n8n.dev01.modelmatrix.ai/webhook-test/6e888300-dc95-4d5c-a51a-f10d8afa2ece`
+  - Evaluator: `https://n8n.dev01.modelmatrix.ai/webhook/8bc54e6e-7340-4db7-826f-0fd6c8f0c1e0`
+
 ## Environment Variables
 - `OPENROUTER_KEY` - API key for OpenRouter (used by n8n webhook)

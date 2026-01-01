@@ -10,6 +10,9 @@ const BATCH_EXECUTOR_URL =
 const EVALUATOR_URL =
   "https://n8n.dev01.modelmatrix.ai/webhook/8bc54e6e-7340-4db7-826f-0fd6c8f0c1e0";
 
+const GOOGLE_SHEET_ID = "1GXhMptDgVeen6gqn3rhulLa-0wSwXFVwwEBfNWoxxXU";
+const DEFAULT_SHEET_NAME = "MTX_TESTCASES";
+
 const AVAILABLE_MODELS = [
   "meta-llama/llama-3.1-8b-instruct",
   "meta-llama/llama-3.3-70b-instruct",
@@ -205,6 +208,72 @@ export async function registerRoutes(
       console.error("Error calling evaluator:", error);
       res.status(500).json({
         error: "Failed to call evaluator",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
+  app.get("/api/test-cases", async (req, res) => {
+    try {
+      const sheetName = (req.query.sheet as string) || DEFAULT_SHEET_NAME;
+      
+      const gvizUrl = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
+      
+      const response = await fetch(gvizUrl);
+      
+      if (!response.ok) {
+        return res.status(response.status).json({
+          error: "Failed to fetch Google Sheet",
+          details: `Status: ${response.status}`,
+        });
+      }
+
+      const text = await response.text();
+      
+      const jsonMatch = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);?$/);
+      if (!jsonMatch) {
+        return res.status(502).json({
+          error: "Failed to parse Google Sheet response",
+          details: "Could not extract JSON from gviz response",
+        });
+      }
+
+      const gvizData = JSON.parse(jsonMatch[1]);
+      
+      if (!gvizData.table || !gvizData.table.rows) {
+        return res.status(502).json({
+          error: "Invalid Google Sheet data structure",
+        });
+      }
+
+      const headers = gvizData.table.cols.map((col: { label: string }) => col.label || "");
+      
+      const testCases = gvizData.table.rows.map((row: { c: Array<{ v: unknown } | null> }, index: number) => {
+        const rowData: Record<string, unknown> = { rowIndex: index + 1 };
+        row.c.forEach((cell: { v: unknown } | null, colIndex: number) => {
+          const header = headers[colIndex];
+          if (header) {
+            rowData[header] = cell?.v ?? "";
+          }
+        });
+        return rowData;
+      });
+
+      const validTestCases = testCases.filter((tc: Record<string, unknown>) => {
+        const id = tc["TESTCASE_NUMBER"] || tc["testcase_number"] || tc["ID"] || tc["id"] || tc["MTX_SESSION_ID"];
+        return id !== undefined && id !== null && id !== "";
+      });
+
+      res.json({
+        sheetName,
+        headers,
+        testCases: validTestCases,
+        totalCount: validTestCases.length,
+      });
+    } catch (error) {
+      console.error("Error fetching test cases:", error);
+      res.status(500).json({
+        error: "Failed to fetch test cases",
         message: error instanceof Error ? error.message : "Unknown error",
       });
     }
