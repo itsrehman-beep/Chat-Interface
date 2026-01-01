@@ -41,7 +41,32 @@ function parseAndFormatContent(content: string): { formatted: string; isJson: bo
   }
 }
 
-function extractSummary(content: string): string {
+function extractWidgetInfo(jsonStr: string): { type: string; contentSummary: string } | null {
+  try {
+    const parsed = JSON.parse(jsonStr);
+    if (parsed.type && parsed.props) {
+      const propKeys = Object.keys(parsed.props);
+      const contentItems: string[] = [];
+      for (const key of propKeys) {
+        const val = parsed.props[key];
+        if (Array.isArray(val)) {
+          contentItems.push(`${val.length} ${key}`);
+        } else if (typeof val === "object" && val !== null) {
+          contentItems.push(key);
+        }
+      }
+      return {
+        type: parsed.type,
+        contentSummary: contentItems.join(", ") || "object"
+      };
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function extractSummary(content: string, isExpectedOutput = false): string {
   if (!content) return "";
   
   try {
@@ -55,11 +80,22 @@ function extractSummary(content: string): string {
     }
     
     if (parsed.response) {
+      const jsonMatch = parsed.response.match(/```json\s*([\s\S]*?)\s*```/);
+      if (jsonMatch) {
+        const widgetInfo = extractWidgetInfo(jsonMatch[1]);
+        if (widgetInfo) {
+          return `Widget: ${widgetInfo.type} | Content: ${widgetInfo.contentSummary}`;
+        }
+      }
+      
       const cleanResponse = parsed.response
         .replace(/<answer>|<\/answer>/g, "")
-        .replace(/```json[\s\S]*?```/g, "[JSON widget]")
+        .replace(/```json[\s\S]*?```/g, "")
         .trim();
-      return cleanResponse.slice(0, 120) + (cleanResponse.length > 120 ? "..." : "");
+      if (cleanResponse) {
+        return cleanResponse.slice(0, 120) + (cleanResponse.length > 120 ? "..." : "");
+      }
+      return "Response with widget data";
     }
     
     return JSON.stringify(parsed).slice(0, 100) + "...";
@@ -548,18 +584,18 @@ export default function BatchExecutorPage() {
         open={detailDialog.open} 
         onOpenChange={(open) => setDetailDialog(prev => ({ ...prev, open }))}
       >
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
-          <DialogHeader>
+        <DialogContent className="max-w-4xl w-[90vw] h-[85vh] flex flex-col p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 shrink-0 border-b">
             <DialogTitle data-testid="dialog-title">{detailDialog.title}</DialogTitle>
           </DialogHeader>
-          <ScrollArea className="flex-1 mt-4">
+          <div className="flex-1 overflow-auto px-6 py-4">
             <pre 
-              className="text-sm font-mono whitespace-pre-wrap bg-muted/30 p-4 rounded-md overflow-x-auto"
+              className="text-sm font-mono whitespace-pre-wrap bg-muted/30 p-4 rounded-md"
               data-testid="dialog-content"
             >
               {parseAndFormatContent(detailDialog.content).formatted}
             </pre>
-          </ScrollArea>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
