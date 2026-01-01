@@ -5,7 +5,7 @@ const WEBHOOK_URL =
   "https://n8n.dev01.modelmatrix.ai/webhook/d87c25a6-5ebe-4dbe-9f94-504eab7aa23b";
 
 const BATCH_EXECUTOR_URL =
-  "https://n8n.dev01.modelmatrix.ai/webhook-test/6e888300-dc95-4d5c-a51a-f10d8afa2ece";
+  "https://n8n.dev01.modelmatrix.ai/webhook/6e888300-dc95-4d5c-a51a-f10d8afa2ece";
 
 const EVALUATOR_URL =
   "https://n8n.dev01.modelmatrix.ai/webhook/8bc54e6e-7340-4db7-826f-0fd6c8f0c1e0";
@@ -34,7 +34,14 @@ export async function registerRoutes(
 
   app.post("/api/webhook", async (req, res) => {
     try {
-      const { session_id, model, current_agent, messages, intent_system_prompt, runtime_system_prompt } = req.body;
+      const {
+        session_id,
+        model,
+        current_agent,
+        messages,
+        intent_system_prompt,
+        runtime_system_prompt,
+      } = req.body;
 
       if (!session_id || !model) {
         return res.status(400).json({
@@ -54,7 +61,7 @@ export async function registerRoutes(
         model,
         messages,
       };
-      
+
       if (intent_system_prompt) {
         webhookPayload.intent_system_prompt = intent_system_prompt;
       }
@@ -62,8 +69,11 @@ export async function registerRoutes(
         webhookPayload.runtime_system_prompt = runtime_system_prompt;
       }
 
-      console.log("Sending webhook request:", JSON.stringify(webhookPayload, null, 2));
-      
+      console.log(
+        "Sending webhook request:",
+        JSON.stringify(webhookPayload, null, 2),
+      );
+
       const response = await fetch(WEBHOOK_URL, {
         method: "POST",
         headers: {
@@ -100,7 +110,7 @@ export async function registerRoutes(
           details: responseText.substring(0, 200),
         });
       }
-      
+
       res.json(data);
     } catch (error) {
       console.error("Error calling webhook:", error);
@@ -117,7 +127,8 @@ export async function registerRoutes(
 
       const payload: { limit?: number; specific_ids?: string[] } = {};
       if (limit !== undefined) payload.limit = limit;
-      if (specific_ids && Array.isArray(specific_ids)) payload.specific_ids = specific_ids;
+      if (specific_ids && Array.isArray(specific_ids))
+        payload.specific_ids = specific_ids;
 
       console.log("Batch executor request:", JSON.stringify(payload, null, 2));
 
@@ -139,7 +150,9 @@ export async function registerRoutes(
       }
 
       if (!responseText || responseText.trim() === "") {
-        return res.status(502).json({ error: "Batch executor returned empty response" });
+        return res
+          .status(502)
+          .json({ error: "Batch executor returned empty response" });
       }
 
       let data;
@@ -190,7 +203,9 @@ export async function registerRoutes(
       }
 
       if (!responseText || responseText.trim() === "") {
-        return res.status(502).json({ error: "Evaluator returned empty response" });
+        return res
+          .status(502)
+          .json({ error: "Evaluator returned empty response" });
       }
 
       let data;
@@ -216,11 +231,11 @@ export async function registerRoutes(
   app.get("/api/test-cases", async (req, res) => {
     try {
       const sheetName = (req.query.sheet as string) || DEFAULT_SHEET_NAME;
-      
+
       const gvizUrl = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
-      
+
       const response = await fetch(gvizUrl);
-      
+
       if (!response.ok) {
         return res.status(response.status).json({
           error: "Failed to fetch Google Sheet",
@@ -229,8 +244,10 @@ export async function registerRoutes(
       }
 
       const text = await response.text();
-      
-      const jsonMatch = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);?$/);
+
+      const jsonMatch = text.match(
+        /google\.visualization\.Query\.setResponse\(([\s\S]*)\);?$/,
+      );
       if (!jsonMatch) {
         return res.status(502).json({
           error: "Failed to parse Google Sheet response",
@@ -239,28 +256,37 @@ export async function registerRoutes(
       }
 
       const gvizData = JSON.parse(jsonMatch[1]);
-      
+
       if (!gvizData.table || !gvizData.table.rows) {
         return res.status(502).json({
           error: "Invalid Google Sheet data structure",
         });
       }
 
-      const headers = gvizData.table.cols.map((col: { label: string }) => col.label || "");
-      
-      const testCases = gvizData.table.rows.map((row: { c: Array<{ v: unknown } | null> }, index: number) => {
-        const rowData: Record<string, unknown> = { rowIndex: index + 1 };
-        row.c.forEach((cell: { v: unknown } | null, colIndex: number) => {
-          const header = headers[colIndex];
-          if (header) {
-            rowData[header] = cell?.v ?? "";
-          }
-        });
-        return rowData;
-      });
+      const headers = gvizData.table.cols.map(
+        (col: { label: string }) => col.label || "",
+      );
+
+      const testCases = gvizData.table.rows.map(
+        (row: { c: Array<{ v: unknown } | null> }, index: number) => {
+          const rowData: Record<string, unknown> = { rowIndex: index + 1 };
+          row.c.forEach((cell: { v: unknown } | null, colIndex: number) => {
+            const header = headers[colIndex];
+            if (header) {
+              rowData[header] = cell?.v ?? "";
+            }
+          });
+          return rowData;
+        },
+      );
 
       const validTestCases = testCases.filter((tc: Record<string, unknown>) => {
-        const id = tc["TESTCASE_NUMBER"] || tc["testcase_number"] || tc["ID"] || tc["id"] || tc["MTX_SESSION_ID"];
+        const id =
+          tc["TESTCASE_NUMBER"] ||
+          tc["testcase_number"] ||
+          tc["ID"] ||
+          tc["id"] ||
+          tc["MTX_SESSION_ID"];
         return id !== undefined && id !== null && id !== "";
       });
 
