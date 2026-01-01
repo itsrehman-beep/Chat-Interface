@@ -11,7 +11,7 @@ const EVALUATOR_URL =
   "https://n8n.dev01.modelmatrix.ai/webhook/8bc54e6e-7340-4db7-826f-0fd6c8f0c1e0";
 
 const GOOGLE_SHEET_ID = "1GXhMptDgVeen6gqn3rhulLa-0wSwXFVwwEBfNWoxxXU";
-const DEFAULT_SHEET_NAME = "MTX_TESTCASES";
+const DEFAULT_SHEET_NAME = "MTX_TEST_CASES";
 
 const AVAILABLE_MODELS = [
   "meta-llama/llama-3.1-8b-instruct",
