@@ -471,21 +471,12 @@ function extractWidgetFromRuntimePrompt(data: unknown[] | Record<string, unknown
 function RuntimePromptSection({ data }: { data: unknown[] | Record<string, unknown> }) {
   const promptArray = Array.isArray(data) ? data : [data];
   
-  // Debug: log the raw data structure
-  console.log("[RuntimePromptSection] Raw data:", JSON.stringify(data, null, 2).slice(0, 3000));
-  
   const allReasonings: string[] = [];
   const seenReasoningKeys = new Set<string>();
   const allToolCalls: { name: string; arguments: string }[] = [];
   const allUsages: Record<string, unknown>[] = [];
   let finalContent = "";
   const widgetInfo = extractWidgetFromRuntimePrompt(data);
-  
-  console.log("[WIDGET_DEBUG] widgetInfo:", widgetInfo);
-  console.log("[WIDGET_DEBUG] widgetInfo truthy:", !!widgetInfo);
-  if (widgetInfo) {
-    console.log("[WIDGET_DEBUG] widgetInfo.type:", widgetInfo.type);
-  }
 
   for (const item of promptArray) {
     if (!item || typeof item !== "object") continue;
@@ -536,14 +527,8 @@ function RuntimePromptSection({ data }: { data: unknown[] | Record<string, unkno
     }
   }
 
-  // Add debug element
-  console.log("[WIDGET_DEBUG] About to render. widgetInfo exists:", !!widgetInfo);
-  
   return (
     <div className="space-y-4" data-testid="runtime-prompt-section">
-      <div data-testid="debug-widget-info" data-widget-found={String(!!widgetInfo)}>
-        {/* Debug marker */}
-      </div>
       {widgetInfo && (
         <div className="space-y-2" data-testid="widget-section">
           <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-2">

@@ -1,0 +1,76 @@
+Ok i have added a new thing to the whole set up we now have a new workflow called the Batch Executor that reads rows from an excel about all different testcases and checks there responses, the excel sheet is https://docs.google.com/spreadsheets/d/1GXhMptDgVeen6gqn3rhulLa-0wSwXFVwwEBfNWoxxXU/edit?gid=1142552786, the excel sheets are MTX_INTENT_LOGS, MTX_RUNTIME_LOGS, MTX_TEST_CASES, MTX_TEST_RESULTS
+
+The testcases are stored in MTX_TEST_CASES with these columns TESTCASE_ID,INPUT,EXPECTED_OUTPUT,TESTCASE_NUMBER; the columns are self-explanatory, and the results of the testcases are stored in MTX_TEST_CASES which has columns:- TEST_RUN_ID,TESTCASE_NUMBER,TEST_RESPONSE,EVALUATION,STATUS,GRADE_SCORE,GRADE_PASS,GRADE_REASON; you can match these two's rows based on TESTCASE_NUMBER
+
+Update the UI to add pages where the User can view or run the batch exector, specifically choose which testcases to run and view the resposnes, they should then be able to view evaluation results after clicking an evaluate button. More details below:-
+
+Batch Executor: POST https://n8n.dev01.modelmatrix.ai/webhook-test/6e888300-dc95-4d5c-a51a-f10d8afa2ece
+
+INPUT (Request Body):- {
+  "limit": 2,
+  "specific_ids": ["TC0001","TC0002"]
+}
+
+OUTPUT (Response Body):- 
+
+[
+  {
+    "TEST_RUN_ID": "Run_2026-01-02T02:16:13",
+    "TESTCASE_NUMBER": "TC0001",
+    "TEST_RESPONSE": "Which account would you like to transfer the $100 from? You can provide the account number, or let me show you a list of your available accounts.",
+    "EXPECTED_OUTPUT": "{\"response\":\"<answer>Sure, I can help you transferâ€¯$100.â€¯Which account would you like to transfer the money **from**? You can provide the account number or let me show you a list of your accounts.</answer>\"}"
+  },
+  {
+    "TEST_RUN_ID": "Run_2026-01-02T02:16:13",
+    "TESTCASE_NUMBER": "TC0002",
+    "TEST_RESPONSE": "Here are your pending bills:\n\n- **Biller Name:** Internet Provider  \n  **Amount:** 65 USD  \n  **Due Date:** Dec 1, 2025  \n  **Status:** Pending  \n  **Account number:** N/A",
+    "EXPECTED_OUTPUT": "{\"response\":\"<answer>```json\\n{\\n \\\"type\\\": \\\"list_outstanding_bills_widget\\\",\\n \\\"props\\\": {\\n \\\"bills\\\": [\\n {\\n \\\"title\\\": \\\"Electric Company\\\",\\n \\\"amount\\\": \\\"$150.00\\\",\\n \\\"due\\\": \\\"Oct 15, 2025\\\",\\n \\\"status\\\": \\\"Paid\\\",\\n \\\"on_pay_text\\\": \\\"Pay my Electric Company bill\\\"\\n },\\n {\\n \\\"title\\\": \\\"Water Utility\\\",\\n \\\"amount\\\": \\\"$75.50\\\",\\n \\\"due\\\": \\\"Oct 20, 2025\\\",\\n \\\"status\\\": \\\"Paid\\\",\\n \\\"on_pay_text\\\": \\\"Pay my Water Utility bill\\\"\\n },\\n {\\n \\\"title\\\": \\\"Electric Company\\\",\\n \\\"amount\\\": \\\"$50.00\\\",\\n \\\"due\\\": \\\"Oct 30, 2025\\\",\\n \\\"status\\\": \\\"Paid\\\",\\n \\\"on_pay_text\\\": \\\"Pay my Electric Company bill\\\"\\n },\\n {\\n \\\"title\\\": \\\"Gas Company\\\",\\n \\\"amount\\\": \\\"$95.00\\\",\\n \\\"due\\\": \\\"Nov 20, 2025\\\",\\n \\\"status\\\": \\\"Paid\\\",\\n \\\"on_pay_text\\\": \\\"Pay my Gas Company bill\\\"\\n },\\n {\\n \\\"title\\\": \\\"Electric Company\\\",\\n \\\"amount\\\": \\\"$120.50\\\",\\n \\\"due\\\": \\\"Nov 25, 2025\\\",\\n \\\"status\\\": \\\"Paid\\\",\\n \\\"on_pay_text\\\": \\\"Pay my Electric Company bill\\\"\\n },\\n {\\n \\\"title\\\": \\\"Telecom Operator\\\",\\n \\\"amount\\\": \\\"$48.75\\\",\\n \\\"due\\\": \\\"Nov 28, 2025\\\",\\n \\\"status\\\": \\\"Pending\\\",\\n \\\"on_pay_text\\\": \\\"Pay my Telecom Operator bill\\\"\\n },\\n {\\n \\\"title\\\": \\\"Internet Provider\\\",\\n \\\"amount\\\": \\\"$65.00\\\",\\n \\\"due\\\": \\\"Dec 01, 2025\\\",\\n \\\"status\\\": \\\"Paid\\\",\\n \\\"on_pay_text\\\": \\\"Pay my Internet Provider bill\\\"\\n },\\n {\\n \\\"title\\\": \\\"Property Tax Authority\\\",\\n \\\"amount\\\": \\\"$210.00\\\",\\n \\\"due\\\": \\\"Dec 05, 2025\\\",\\n \\\"status\\\": \\\"Pending\\\",\\n \\\"on_pay_text\\\": \\\"Pay my Property Tax Authority bill\\\"\\n },\\n {\\n \\\"title\\\": \\\"Water Utility\\\",\\n \\\"amount\\\": \\\"$30.20\\\",\\n \\\"due\\\": \\\"Nov 22, 2025\\\",\\n \\\"status\\\": \\\"Paid\\\",\\n \\\"on_pay_text\\\": \\\"Pay my Water Utility bill\\\"\\n },\\n {\\n \\\"title\\\": \\\"Cable TV Service\\\",\\n \\\"amount\\\": \\\"$89.99\\\",\\n \\\"due\\\": \\\"Dec 10, 2025\\\",\\n \\\"status\\\": \\\"Paid\\\",\\n \\\"on_pay_text\\\": \\\"Pay my Cable TV Service bill\\\"\\n },\\n {\\n \\\"title\\\": \\\"Waste Management\\\",\\n \\\"amount\\\": \\\"$22.50\\\",\\n \\\"due\\\": \\\"Nov 30, 2025\\\",\\n \\\"status\\\": \\\"Pending\\\",\\n \\\"on_pay_text\\\": \\\"Pay my Waste Management bill\\\"\\n },\\n {\\n \\\"title\\\": \\\"Insurance Provider\\\",\\n \\\"amount\\\": \\\"$150.00\\\",\\n \\\"due\\\": \\\"Dec 12, 2025\\\",\\n \\\"status\\\": \\\"Pending\\\",\\n \\\"on_pay_text\\\": \\\"Pay my Insurance Provider bill\\\"\\n },\\n {\\n \\\"title\\\": \\\"Gas Company\\\",\\n \\\"amount\\\": \\\"$71.45\\\",\\n \\\"due\\\": \\\"Dec 03, 2025\\\",\\n \\\"status\\\": \\\"Paid\\\",\\n \\\"on_pay_text\\\": \\\"Pay my Gas Company bill\\\"\\n },\\n {\\n \\\"title\\\": \\\"Electric Company\\\",\\n \\\"amount\\\": \\\"$102.85\\\",\\n \\\"due\\\": \\\"Dec 08, 2025\\\",\\n \\\"status\\\": \\\"Pending\\\",\\n \\\"on_pay_text\\\": \\\"Pay my Electric Company bill\\\"\\n },\\n {\\n \\\"title\\\": \\\"Electric Company\\\",\\n \\\"amount\\\": \\\"$150.00\\\",\\n \\\"due\\\": \\\"Nov 15, 2025\\\",\\n \\\"status\\\": \\\"Pending\\\",\\n \\\"on_pay_text\\\": \\\"Pay my Electric Company bill\\\"\\n },\\n {\\n \\\"title\\\": \\\"Water Utility\\\",\\n \\\"amount\\\": \\\"$75.50\\\",\\n \\\"due\\\": \\\"Nov 20, 2025\\\",\\n \\\"status\\\": \\\"Pending\\\",\\n \\\"on_pay_text\\\": \\\"Pay my Water Utility bill\\\"\\n }\\n ]\\n }\\n}\\n```</answer>\"}"
+  }
+]
+
+
+
+Evaluator: POST https://n8n.dev01.modelmatrix.ai/webhook/8bc54e6e-7340-4db7-826f-0fd6c8f0c1e0
+
+INPUT (Request Body):- {
+    "run_id": "Run_2026-01-01T23:11:18"
+}
+
+
+OUTPUT (Response Body):- [
+    {
+        "grade_score": 8,
+        "grade_pass": true,
+        "grade_reason": "Correct widget type found, but it's an incorrect version (v2 vs non-v2). Schema is otherwise valid.",
+        "testcase_number": "TC0025",
+        "row_number": 2
+    },
+    {
+        "grade_score": 6,
+        "grade_pass": true,
+        "grade_reason": "MISSING Widget Wrapper. The AI returned the raw JSON data correctly (e.g. just the list) but failed to wrap it in the standard `{ type: ..., props: ... }` structure.",
+        "testcase_number": "TC0005",
+        "row_number": 3
+    },
+    {
+        "grade_score": 8,
+        "grade_pass": true,
+        "grade_reason": "Correct widget type, minor schema difference. The widget type is incorrect. Expected bank_accounts_carousel_v2_widget but returned bank_accounts_carousel_widget",
+        "testcase_number": "TC0016",
+        "row_number": 4
+    },
+    {
+        "grade_score": 4,
+        "grade_pass": false,
+        "grade_reason": "Correct widget type found, but CRITICAL keys are missing inside the props (Broken Schema). Missing 'due' from the first bill. The output is a list of bills, so the schema is considered broken.",
+        "testcase_number": "TC0004",
+        "row_number": 5
+    },
+    {
+        "grade_score": 10,
+        "grade_pass": true,
+        "grade_reason": "Perfect Schema. Correct widget type found, and all keys from expected schema exist in actual.",
+        "testcase_number": "TC0018",
+        "row_number": 6
+    }
+]

@@ -13,7 +13,10 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { PromptEditor } from "@/components/prompt-editor";
 import type { ChatMessage, ChatSession } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
-import { Brain, Bot } from "lucide-react";
+import { Brain, Bot, FlaskConical } from "lucide-react";
+import { Link } from "wouter";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const STORAGE_KEY = "cerebras-chat-sessions";
 
@@ -450,6 +453,16 @@ export default function ChatPage() {
                 onSave={handleSavePrompts}
                 disabled={messages.length > 0}
               />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link href="/batch">
+                    <Button variant="ghost" size="icon" data-testid="button-batch-executor">
+                      <FlaskConical className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent>Batch Executor</TooltipContent>
+              </Tooltip>
               <ThemeToggle />
             </div>
           </div>

@@ -4,6 +4,12 @@ import { createServer, type Server } from "http";
 const WEBHOOK_URL =
   "https://n8n.dev01.modelmatrix.ai/webhook/d87c25a6-5ebe-4dbe-9f94-504eab7aa23b";
 
+const BATCH_EXECUTOR_URL =
+  "https://n8n.dev01.modelmatrix.ai/webhook-test/6e888300-dc95-4d5c-a51a-f10d8afa2ece";
+
+const EVALUATOR_URL =
+  "https://n8n.dev01.modelmatrix.ai/webhook/8bc54e6e-7340-4db7-826f-0fd6c8f0c1e0";
+
 const AVAILABLE_MODELS = [
   "meta-llama/llama-3.1-8b-instruct",
   "meta-llama/llama-3.3-70b-instruct",
@@ -65,18 +71,6 @@ export async function registerRoutes(
 
       const responseText = await response.text();
       console.log("Webhook response status:", response.status);
-      console.log("Webhook response body (full):", responseText);
-      
-      // Log parsed structure for debugging
-      try {
-        const parsed = JSON.parse(responseText);
-        if (Array.isArray(parsed)) {
-          console.log("Response is array with", parsed.length, "items");
-          parsed.forEach((item, i) => {
-            console.log(`Item ${i} keys:`, Object.keys(item));
-          });
-        }
-      } catch { /* ignore */ }
 
       if (!response.ok) {
         console.error("Webhook error:", responseText);
@@ -109,6 +103,108 @@ export async function registerRoutes(
       console.error("Error calling webhook:", error);
       res.status(500).json({
         error: "Failed to call webhook",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
+  app.post("/api/batch-executor", async (req, res) => {
+    try {
+      const { limit, specific_ids } = req.body;
+
+      const payload: { limit?: number; specific_ids?: string[] } = {};
+      if (limit !== undefined) payload.limit = limit;
+      if (specific_ids && Array.isArray(specific_ids)) payload.specific_ids = specific_ids;
+
+      console.log("Batch executor request:", JSON.stringify(payload, null, 2));
+
+      const response = await fetch(BATCH_EXECUTOR_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const responseText = await response.text();
+      console.log("Batch executor response status:", response.status);
+
+      if (!response.ok) {
+        console.error("Batch executor error:", responseText);
+        return res.status(response.status).json({
+          error: "Batch executor request failed",
+          details: responseText,
+        });
+      }
+
+      if (!responseText || responseText.trim() === "") {
+        return res.status(502).json({ error: "Batch executor returned empty response" });
+      }
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch {
+        return res.status(502).json({
+          error: "Batch executor returned invalid JSON",
+          details: responseText.substring(0, 200),
+        });
+      }
+
+      res.json(data);
+    } catch (error) {
+      console.error("Error calling batch executor:", error);
+      res.status(500).json({
+        error: "Failed to call batch executor",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
+  app.post("/api/evaluator", async (req, res) => {
+    try {
+      const { run_id } = req.body;
+
+      if (!run_id) {
+        return res.status(400).json({ error: "run_id is required" });
+      }
+
+      console.log("Evaluator request:", { run_id });
+
+      const response = await fetch(EVALUATOR_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ run_id }),
+      });
+
+      const responseText = await response.text();
+      console.log("Evaluator response status:", response.status);
+
+      if (!response.ok) {
+        console.error("Evaluator error:", responseText);
+        return res.status(response.status).json({
+          error: "Evaluator request failed",
+          details: responseText,
+        });
+      }
+
+      if (!responseText || responseText.trim() === "") {
+        return res.status(502).json({ error: "Evaluator returned empty response" });
+      }
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch {
+        return res.status(502).json({
+          error: "Evaluator returned invalid JSON",
+          details: responseText.substring(0, 200),
+        });
+      }
+
+      res.json(data);
+    } catch (error) {
+      console.error("Error calling evaluator:", error);
+      res.status(500).json({
+        error: "Failed to call evaluator",
         message: error instanceof Error ? error.message : "Unknown error",
       });
     }

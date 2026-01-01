@@ -14,11 +14,13 @@ A React-based chat interface for interacting with Cerebras/OpenRouter AI models 
 - **Side Pane Inspector**: Expandable sections for Intent Analyzer and Runtime Prompt responses
 - **Theme Toggle**: Light/dark mode with localStorage persistence
 - **Responsive Design**: Side pane stacks on mobile devices
+- **Batch Executor**: Run multiple test cases and evaluate results (accessible via flask icon in header)
 
 ## Architecture
 
 ### Frontend (React + Vite)
 - `client/src/pages/chat.tsx` - Main chat page with all state management
+- `client/src/pages/batch-executor.tsx` - Batch test case execution and evaluation
 - `client/src/components/` - Reusable UI components:
   - `model-selector.tsx` - Model dropdown selector
   - `chat-message.tsx` - Individual message rendering with tool responses
@@ -33,6 +35,8 @@ A React-based chat interface for interacting with Cerebras/OpenRouter AI models 
 - `server/routes.ts` - API endpoints:
   - `GET /api/models` - Returns static list of available models
   - `POST /api/webhook` - Proxies messages to n8n webhook
+  - `POST /api/batch-executor` - Runs test cases via batch executor webhook
+  - `POST /api/evaluator` - Evaluates test run results
 
 ### Shared
 - `shared/schema.ts` - TypeScript types and Zod schemas for ChatMessage, WebhookRequest, etc.
