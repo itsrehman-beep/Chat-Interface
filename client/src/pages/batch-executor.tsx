@@ -27,6 +27,7 @@ import {
 import { Link } from "wouter";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { apiRequest } from "@/lib/queryClient";
+import { ModelSelector } from "@/components/model-selector";
 
 function parseAndFormatContent(content: string): { formatted: string; isJson: boolean } {
   if (!content || typeof content !== "string") {
@@ -141,6 +142,7 @@ export default function BatchExecutorPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [manualIds, setManualIds] = useState("");
   const [limit, setLimit] = useState<string>("5");
+  const [selectedModel, setSelectedModel] = useState<string>("meta-llama/llama-3.3-70b-instruct");
   const [results, setResults] = useState<TestResult[]>([]);
   const [evaluations, setEvaluations] = useState<EvaluationResult[]>([]);
   const [currentRunId, setCurrentRunId] = useState<string | null>(null);
@@ -158,6 +160,10 @@ export default function BatchExecutorPage() {
     queryKey: ["/api/test-cases"],
   });
 
+  const modelsQuery = useQuery<{ id: string }[]>({
+    queryKey: ["/api/models"],
+  });
+
   const runBatchMutation = useMutation({
     mutationFn: async () => {
       const idsFromSelection = Array.from(selectedIds);
@@ -169,12 +175,15 @@ export default function BatchExecutorPage() {
       const combinedIds = [...idsFromSelection, ...idsFromManual];
       const allIds = combinedIds.filter((id, index) => combinedIds.indexOf(id) === index);
 
-      const payload: { limit?: number; specific_ids?: string[] } = {};
+      const payload: { limit?: number; specific_ids?: string[]; model?: string } = {};
       if (allIds.length > 0) {
         payload.specific_ids = allIds;
       }
       if (limit && parseInt(limit) > 0) {
         payload.limit = parseInt(limit);
+      }
+      if (selectedModel) {
+        payload.model = selectedModel;
       }
 
       const response = await apiRequest("POST", "/api/batch-executor", payload);
@@ -278,6 +287,15 @@ export default function BatchExecutorPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-wrap gap-4 items-end">
+              <div className="w-80">
+                <ModelSelector
+                  models={modelsQuery.data?.map(m => m.id) || []}
+                  selectedModel={selectedModel}
+                  onModelSelect={setSelectedModel}
+                  isLoading={modelsQuery.isLoading}
+                  error={modelsQuery.isError ? "Failed to load models" : null}
+                />
+              </div>
               <div className="flex-1 min-w-[200px]">
                 <label className="text-sm text-muted-foreground mb-1.5 block">
                   Test Case IDs (comma-separated)

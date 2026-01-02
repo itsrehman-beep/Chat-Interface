@@ -122,12 +122,13 @@ export async function registerRoutes(
 
   app.post("/api/batch-executor", async (req, res) => {
     try {
-      const { limit, specific_ids } = req.body;
+      const { limit, specific_ids, model } = req.body;
 
-      const payload: { limit?: number; specific_ids?: string[] } = {};
+      const payload: { limit?: number; specific_ids?: string[]; model?: string } = {};
       if (limit !== undefined) payload.limit = limit;
       if (specific_ids && Array.isArray(specific_ids))
         payload.specific_ids = specific_ids;
+      if (model) payload.model = model;
 
       console.log("Batch executor request:", JSON.stringify(payload, null, 2));
 
