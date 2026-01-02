@@ -140,7 +140,6 @@ interface EvaluationResult {
 
 export default function BatchExecutorPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [manualIds, setManualIds] = useState("");
   const [limit, setLimit] = useState<string>("5");
   const [selectedModel, setSelectedModel] = useState<string>("qwen/qwen3-32b");
   const [results, setResults] = useState<TestResult[]>([]);
@@ -167,13 +166,7 @@ export default function BatchExecutorPage() {
   const runBatchMutation = useMutation({
     mutationFn: async () => {
       const idsFromSelection = Array.from(selectedIds);
-      const idsFromManual = manualIds
-        .split(",")
-        .map((id) => id.trim())
-        .filter((id) => id.length > 0);
-      
-      const combinedIds = [...idsFromSelection, ...idsFromManual];
-      const allIds = combinedIds.filter((id, index) => combinedIds.indexOf(id) === index);
+      const allIds = idsFromSelection.filter((id, index) => idsFromSelection.indexOf(id) === index);
 
       const payload: { limit?: number; specific_ids?: string[]; model?: string } = {};
       if (allIds.length > 0) {
@@ -296,17 +289,6 @@ export default function BatchExecutorPage() {
                   error={modelsQuery.isError ? "Failed to load models" : null}
                 />
               </div>
-              <div className="flex-1 min-w-[200px]">
-                <label className="text-sm text-muted-foreground mb-1.5 block">
-                  Test Case IDs (comma-separated)
-                </label>
-                <Input
-                  placeholder="TC0001, TC0002, TC0003"
-                  value={manualIds}
-                  onChange={(e) => setManualIds(e.target.value)}
-                  data-testid="input-testcase-ids"
-                />
-              </div>
               <div className="w-24">
                 <label className="text-sm text-muted-foreground mb-1.5 block">
                   Limit
@@ -331,8 +313,8 @@ export default function BatchExecutorPage() {
                 ) : (
                   <Play className="h-4 w-4 mr-2" />
                 )}
-                {selectedIds.size + (manualIds.trim() ? manualIds.split(",").filter(id => id.trim()).length : 0) > 0
-                  ? `Run Tests (${selectedIds.size + (manualIds.trim() ? manualIds.split(",").filter(id => id.trim()).length : 0)})`
+                {selectedIds.size > 0
+                  ? `Run Tests (${selectedIds.size})`
                   : `Run Tests (limit: ${limit || 5})`}
               </Button>
               {results.length > 0 && currentRunId && (
