@@ -142,7 +142,7 @@ export default function BatchExecutorPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [manualIds, setManualIds] = useState("");
   const [limit, setLimit] = useState<string>("5");
-  const [selectedModel, setSelectedModel] = useState<string>("meta-llama/llama-3.3-70b-instruct");
+  const [selectedModel, setSelectedModel] = useState<string>("qwen/qwen3-32b");
   const [results, setResults] = useState<TestResult[]>([]);
   const [evaluations, setEvaluations] = useState<EvaluationResult[]>([]);
   const [currentRunId, setCurrentRunId] = useState<string | null>(null);

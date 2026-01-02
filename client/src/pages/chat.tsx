@@ -24,7 +24,7 @@ function createNewSession(): ChatSession {
   return {
     id: crypto.randomUUID(),
     title: "New Chat",
-    modelId: null,
+    modelId: "qwen/qwen3-32b",
     currentAgent: null,
     messages: [],
     createdAt: Date.now(),
