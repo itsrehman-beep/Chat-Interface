@@ -14,7 +14,6 @@ const GOOGLE_SHEET_ID = "1GXhMptDgVeen6gqn3rhulLa-0wSwXFVwwEBfNWoxxXU";
 const DEFAULT_SHEET_NAME = "MTX_TEST_CASES";
 
 const AVAILABLE_MODELS = [
-  "meta-llama/llama-3.1-8b-instruct",
   "meta-llama/llama-3.3-70b-instruct",
   "qwen/qwen3-32b",
   "qwen/qwen3-235b-a22b-2507",
