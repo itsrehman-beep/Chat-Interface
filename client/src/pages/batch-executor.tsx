@@ -160,7 +160,7 @@ export default function BatchExecutorPage() {
     queryKey: ["/api/test-cases"],
   });
 
-  const modelsQuery = useQuery<{ id: string }[]>({
+  const modelsQuery = useQuery<{ data: { id: string }[] }>({
     queryKey: ["/api/models"],
   });
 
@@ -289,7 +289,7 @@ export default function BatchExecutorPage() {
             <div className="flex flex-wrap gap-4 items-end">
               <div className="w-80">
                 <ModelSelector
-                  models={modelsQuery.data?.map(m => m.id) || []}
+                  models={modelsQuery.data?.data?.map(m => m.id) || []}
                   selectedModel={selectedModel}
                   onModelSelect={setSelectedModel}
                   isLoading={modelsQuery.isLoading}
